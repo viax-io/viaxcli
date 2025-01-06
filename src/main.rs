@@ -2,6 +2,7 @@ use std::{collections::HashMap, error::Error, path::PathBuf};
 
 use clap::Parser;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
 #[derive(Parser)]
 struct Cli {
@@ -15,8 +16,10 @@ struct ConfVal {
     secret: String,
 }
 
+#[serde_as]
 #[derive(Debug, Serialize, Deserialize)]
 struct ViaxConfig {
+    #[serde(flatten)]
     env: HashMap<String, ConfVal>,
 }
 impl ::std::default::Default for ViaxConfig {
