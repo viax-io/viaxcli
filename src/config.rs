@@ -14,6 +14,7 @@ pub struct ViaxConfig {
     #[serde(flatten)]
     pub env: HashMap<String, ConfVal>,
 }
+
 impl ::std::default::Default for ViaxConfig {
     fn default() -> Self {
         let conf_val = ConfVal {
