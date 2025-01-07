@@ -1,38 +1,11 @@
-use std::{collections::HashMap, error::Error, path::PathBuf};
+pub mod cli;
+pub mod config;
+
+use crate::cli::Cli;
+use std::{error::Error, path::PathBuf};
 
 use clap::Parser;
-use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
-
-#[derive(Parser)]
-struct Cli {
-    pattern: String,
-    path: std::path::PathBuf,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ConfVal {
-    client_id: String,
-    secret: String,
-}
-
-#[serde_as]
-#[derive(Debug, Serialize, Deserialize)]
-struct ViaxConfig {
-    #[serde(flatten)]
-    env: HashMap<String, ConfVal>,
-}
-impl ::std::default::Default for ViaxConfig {
-    fn default() -> Self {
-        let conf_val = ConfVal {
-            client_id: "42".into(),
-            secret: "hello".into(),
-        };
-        let mut vals = HashMap::new();
-        vals.insert("default".to_string(), conf_val);
-        Self { env: vals }
-    }
-}
+use config::ViaxConfig;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let user_dir = directories::UserDirs::new().unwrap();
