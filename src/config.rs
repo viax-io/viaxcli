@@ -5,24 +5,32 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfVal {
     pub client_id: String,
-    pub secret: String,
+    pub client_secret: String,
+    pub auth_url: String,
+    pub api_url: String,
 }
 
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ViaxConfig {
+    pub realm: String,
     #[serde(flatten)]
-    pub env: HashMap<String, ConfVal>,
+    pub envs: HashMap<String, ConfVal>,
 }
 
 impl ::std::default::Default for ViaxConfig {
     fn default() -> Self {
         let conf_val = ConfVal {
-            client_id: "42".into(),
-            secret: "hello".into(),
+            client_id: "".into(),
+            client_secret: "".into(),
+            auth_url: "".to_string(),
+            api_url: "".to_string(),
         };
         let mut vals = HashMap::new();
         vals.insert("default".to_string(), conf_val);
-        Self { env: vals }
+        Self {
+            envs: vals,
+            realm: "viax".to_string(),
+        }
     }
 }

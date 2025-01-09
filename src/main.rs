@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::{error::Error, path::PathBuf};
 
 use clap::Parser;
-use config::ViaxConfig;
+use config::{ConfVal, ViaxConfig};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let user_dir = directories::UserDirs::new().unwrap();
@@ -17,19 +17,26 @@ fn main() -> Result<(), Box<dyn Error>> {
     config_path.push(".viax/config");
     let cfg: ViaxConfig = confy::load_path(config_path.as_path())?;
 
-    println!("viax config '{:?}' created, path: {:#?}", cfg, config_path);
+    // println!("viax config '{:?}' created, path: {:#?}", cfg, config_path);
 
     let args = Cli::parse();
 
-    println!("path: {:?}", args.path);
+    // println!("path: {:?}", args.path);
 
     let req_client = reqwest::blocking::Client::new();
-    let url = "https://auth.viax.lab.viax.tech";
-    let def_cfg = cfg.env.get("default").unwrap();
-    let client_id = &def_cfg.client_id;
-    let client_secret = &def_cfg.secret;
+    let def_cfg = cfg
+        .envs
+        .get(&args.env)
+        .or_else(|| -> Option<&ConfVal> { cfg.envs.get("default") })
+        .expect("Env is not present in config, define 'default' config or pass it as 1st argument");
 
-    let viax_api_token = acquire_token(url, client_id, client_secret, "viax", &req_client);
+    let viax_api_token = acquire_token(
+        &def_cfg.auth_url,
+        &def_cfg.client_id,
+        &def_cfg.client_secret,
+        &cfg.realm,
+        &req_client,
+    );
     // println!("api token: {:?}", viax_api_token);
     // let viax_api_token = std::env::var("VIAX_API_TOKEN").expect("Missing VIAX_API_TOKEN env var");
 
@@ -45,7 +52,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .multipart(form)
         .send()
         .unwrap();
-    println!("response >>> {:#?}", response.text()?);
+    println!("response: {:#?}", response.text()?);
 
     // let q = FnMgmnt::build(FnMgmntVariables {
     //     name: Some("my-fun"),
