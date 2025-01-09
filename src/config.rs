@@ -18,6 +18,19 @@ pub struct ViaxConfig {
     pub envs: HashMap<String, ConfVal>,
 }
 
+impl ViaxConfig {
+    pub fn config(&self, env: &str) -> &ConfVal {
+        let def_cfg = self
+            .envs
+            .get(env)
+            .or_else(|| -> Option<&ConfVal> { self.envs.get("default") })
+            .expect(
+                "Env is not present in config, define 'default' config or pass it as 1st argument",
+            );
+        def_cfg
+    }
+}
+
 impl ::std::default::Default for ViaxConfig {
     fn default() -> Self {
         let conf_val = ConfVal {

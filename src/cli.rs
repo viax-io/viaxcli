@@ -1,7 +1,16 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 pub struct Cli {
-    pub env: String,
-    pub path: std::path::PathBuf,
+    pub env: Option<String>,
+    #[command(subcommand)]
+    pub command: Option<Commands>,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum Commands {
+    Deploy {
+        // #[arg(short, long)]
+        path: std::path::PathBuf,
+    },
 }
