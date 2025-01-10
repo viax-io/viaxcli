@@ -36,10 +36,18 @@ pub fn command_deploy(
     let data: cynic::GraphQlResponse<FnDeploy> = response.json()?;
     let fun = data.data.unwrap().upsert_function.unwrap();
 
+    println!("Enqueued deployment:");
     println!(
-        "uid: {:?}, deploy status: {:?}",
-        fun.uid,
+        "uid: {}, deploy status: {:?}",
+        fun.uid.0,
         fun.deploy_status.unwrap()
+    );
+
+    println!("Note: last deployed function will be working until new function is deployed. Previously deployed:");
+    println!(
+        "ready: {}, revision: {}",
+        fun.ready.unwrap(),
+        fun.ready_revision.unwrap()
     );
 
     Ok(())
