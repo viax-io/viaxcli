@@ -6,11 +6,12 @@ use serde::{Deserialize, Serialize};
 pub fn command_deploy(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
+    env: &str,
     path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
     let req_client = reqwest::blocking::Client::new();
     let viax_api_token = acquire_token(
-        &env_cfg.auth_url,
+        &env_cfg.auth_url(&cfg.realm, env),
         &env_cfg.client_id,
         &env_cfg.client_secret,
         &cfg.realm,
@@ -27,7 +28,7 @@ pub fn command_deploy(
     // println!("{:?}", form);
 
     let response = req_client
-        .post("https://api.viax.lab.viax.tech/graphql")
+        .post(env_cfg.api_url(&cfg.realm, env))
         .bearer_auth(format!("Bearer {}", viax_api_token.access_token))
         .multipart(form)
         .send()

@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let env_cfg = cfg.config(&env);
 
     match &args.command {
-        Some(Commands::Deploy { path }) => command_deploy(&cfg, env_cfg, path)?,
+        Some(Commands::Deploy { path }) => command_deploy(&cfg, env_cfg, &env, path)?,
         None => {}
     }
 

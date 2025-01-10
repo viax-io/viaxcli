@@ -6,8 +6,26 @@ use std::collections::HashMap;
 pub struct ConfVal {
     pub client_id: String,
     pub client_secret: String,
-    pub auth_url: String,
-    pub api_url: String,
+    auth_url: Option<String>,
+    api_url: Option<String>,
+}
+
+impl ConfVal {
+    pub fn auth_url(&self, realm: &str, env: &str) -> String {
+        self.auth_url
+            .clone()
+            .or_else(|| -> Option<String> { Some(format!("https://auth.{realm}.{env}.viax.tech")) })
+            .unwrap()
+    }
+
+    pub fn api_url(&self, realm: &str, env: &str) -> String {
+        self.api_url
+            .clone()
+            .or_else(|| -> Option<String> {
+                Some(format!("https://api.{realm}.{env}.viax.tech/graphql"))
+            })
+            .unwrap()
+    }
 }
 
 #[serde_as]
@@ -36,8 +54,8 @@ impl ::std::default::Default for ViaxConfig {
         let conf_val = ConfVal {
             client_id: "".into(),
             client_secret: "".into(),
-            auth_url: "".to_string(),
-            api_url: "".to_string(),
+            auth_url: Some("".to_string()),
+            api_url: Some("".to_string()),
         };
         let mut vals = HashMap::new();
         vals.insert("default".to_string(), conf_val);
