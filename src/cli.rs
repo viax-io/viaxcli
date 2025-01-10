@@ -11,7 +11,7 @@ pub struct Cli {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     Deploy {
-        #[arg(short, long)]
+        // #[arg(short, long)]
         path: std::path::PathBuf,
     },
 }
