@@ -1,6 +1,7 @@
 use std::{error::Error, path::PathBuf};
 
 use crate::config::{ConfVal, ViaxConfig};
+use query::FnDeploy;
 use serde::{Deserialize, Serialize};
 
 pub fn command_deploy(
@@ -21,11 +22,9 @@ pub fn command_deploy(
     // let viax_api_token = std::env::var("VIAX_API_TOKEN").expect("Missing VIAX_API_TOKEN env var");
 
     let form = reqwest::blocking::multipart::Form::new()
-        .text("operations", r#"{ "operationName": "upsertFunction",  "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid } }",  "variables": {    "file": null } }"#)
+        .text("operations", r#"{ "operationName": "upsertFunction", "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid deployStatus version readyRevision ready latestDeploymentStartedAt latestCreatedRevision enqueuedAt } }",  "variables": {    "file": null } }"#)
         .text("map", r#"{ "File":["variables.file"] }"#)
         .file("File", path)?;
-    //"/Users/inc/Work/viax/dev/viaxcli/fn.zip"
-    // println!("{:?}", form);
 
     let response = req_client
         .post(env_cfg.api_url(&cfg.realm, env))
@@ -33,7 +32,16 @@ pub fn command_deploy(
         .multipart(form)
         .send()
         .unwrap();
-    println!("response: {:#?}", response.text()?);
+
+    let data: cynic::GraphQlResponse<FnDeploy> = response.json()?;
+    let fun = data.data.unwrap().upsert_function.unwrap();
+
+    println!(
+        "uid: {:?}, deploy status: {:?}",
+        fun.uid,
+        fun.deploy_status.unwrap()
+    );
+
     Ok(())
 }
 

@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // println!("viax config '{:?}' created, path: {:#?}", cfg, config_path);
 
     let args = Cli::parse();
-    println!("path: {:#?}", args);
+    // println!("path: {:#?}", args);
 
     let env = args
         .env

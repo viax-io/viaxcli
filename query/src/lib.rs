@@ -23,7 +23,7 @@ pub struct Function {
     pub latest_deployment_started_at: Option<DateTime>,
     pub latest_created_revision: Option<String>,
     pub enqueued_at: Option<DateTime>,
-    pub fun: File,
+    // pub fun: Option<File>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
