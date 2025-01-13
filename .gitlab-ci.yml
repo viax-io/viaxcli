@@ -12,7 +12,7 @@
 image: "rust:latest"
 
 stages:
-  - build:amd64
+  - build
 
 # Optional: Pick zero or more services to be used on all builds.
 # Only needed when using a docker container to run your tests in.
@@ -45,7 +45,7 @@ stages:
 #     reports:
 #       junit: $CI_PROJECT_DIR/tests/*.xml
 
-build:amd64:
+build:
     script:
         - rustc --version && cargo --version  # Print version info for debugging
         - rustup target list --installed
