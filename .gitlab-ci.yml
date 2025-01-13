@@ -48,11 +48,9 @@ build:
         - cargo build --release
     tags:
         - common
-
-#     artifacts:
-#         untracked: false
-#         when: on_success
-#         access: all
+    artifacts:
+        paths:
+        - target/release/
 
 # deploy:
 #   stage: deploy
