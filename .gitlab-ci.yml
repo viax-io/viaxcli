@@ -44,11 +44,12 @@ image: "rust:latest"
 
 build:
     script:
+        - rustc --version && cargo --version  # Print version info for debugging
         - cargo build --release
-    artifacts:
-        untracked: false
-        when: on_success
-        access: all
+#     artifacts:
+#         untracked: false
+#         when: on_success
+#         access: all
 
 # deploy:
 #   stage: deploy
