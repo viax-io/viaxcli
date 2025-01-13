@@ -58,7 +58,7 @@ image: "rust:latest"
 
 build:arm64darwin:
     script:
-        - apt-get update && apt-get install gcc-aarch64-linux-gnu
+        - apt-get update && apt-get install -y gcc-aarch64-linux-gnu
         - rustc --version && cargo --version  # Print version info for debugging
         - rustup target add aarch64-apple-darwin
         - rustup target list --installed
