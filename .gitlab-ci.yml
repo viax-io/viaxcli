@@ -45,16 +45,16 @@ image: "rust:latest"
 #     reports:
 #       junit: $CI_PROJECT_DIR/tests/*.xml
 
-# build:amd64:
-#     script:
-#         - rustc --version && cargo --version  # Print version info for debugging
-#         - rustup target list --installed
-#         - cargo build --release
-#     tags:
-#         - common
-#     artifacts:
-#         paths:
-#             - target/release/viaxcli
+build:amd64:
+    script:
+        - rustc --version && cargo --version  # Print version info for debugging
+        - rustup target list --installed
+        - cargo build --release
+    tags:
+        - common
+    artifacts:
+        paths:
+            - target/release/viax
 
 # build:arm64darwin:
 #     script:
@@ -80,7 +80,7 @@ build:win:
         - common
     artifacts:
         paths:
-            - target/x86_64-pc-windows-gnu/release/viaxcli.exe
+            - target/x86_64-pc-windows-gnu/release/viax.exe
 
 # deploy:
 #   stage: deploy
