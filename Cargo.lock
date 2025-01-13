@@ -3397,15 +3397,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
-name = "viax-schema"
-version = "0.1.0"
-dependencies = [
- "cynic",
- "cynic-codegen",
-]
-
-[[package]]
-name = "viaxcli"
+name = "viax"
 version = "0.1.0"
 dependencies = [
  "clap",
@@ -3420,6 +3412,14 @@ dependencies = [
  "serde_with",
  "surf",
  "viax-schema",
+]
+
+[[package]]
+name = "viax-schema"
+version = "0.1.0"
+dependencies = [
+ "cynic",
+ "cynic-codegen",
 ]
 
 [[package]]
