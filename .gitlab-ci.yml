@@ -70,7 +70,7 @@ image: "rust:latest"
 
 build:win:
     script:
-        - apt install -y gcc-mingw-w64
+        - apt install -y gcc-mingw-w64-x86-64
         - rustc --version && cargo --version  # Print version info for debugging
         - rustup target add x86_64-pc-windows-gnu
         - rustup toolchain install stable-x86_64-pc-windows-gnu
