@@ -11,8 +11,8 @@
 # https://hub.docker.com/r/library/rust/tags/
 image: "rust:latest"
 
-stages:
-  - build
+# stages:
+#   - build
 
 # Optional: Pick zero or more services to be used on all builds.
 # Only needed when using a docker container to run your tests in.
@@ -45,7 +45,7 @@ stages:
 #     reports:
 #       junit: $CI_PROJECT_DIR/tests/*.xml
 
-build:
+build:amd64:
     script:
         - rustc --version && cargo --version  # Print version info for debugging
         - rustup target list --installed
