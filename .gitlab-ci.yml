@@ -46,6 +46,9 @@ build:
     script:
         - rustc --version && cargo --version  # Print version info for debugging
         - cargo build --release
+    tags:
+        - common
+
 #     artifacts:
 #         untracked: false
 #         when: on_success
