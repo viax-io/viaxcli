@@ -59,7 +59,7 @@ image: "rust:latest"
 build:arm64darwin:
     script:
         - apt-get update && apt install -y python3-pip
-        - pip3 install ziglang
+        - pip3 install ziglang --break-system-packages
         # - apt-get update && apt-get install -y gcc-aarch64-linux-gnu
         - rustc --version && cargo --version
         - cargo install --locked cargo-zigbuild
