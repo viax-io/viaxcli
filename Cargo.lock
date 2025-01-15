@@ -3403,6 +3403,7 @@ dependencies = [
  "clap",
  "config",
  "confy",
+ "curl",
  "cynic",
  "cynic-codegen",
  "directories",

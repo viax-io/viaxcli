@@ -45,48 +45,48 @@ image: "rust:latest"
 #     reports:
 #       junit: $CI_PROJECT_DIR/tests/*.xml
 
-build:amd64:
-    script:
-        - rustc --version && cargo --version  # Print version info for debugging
-        - rustup target list --installed
-        - cargo build --release
-    tags:
-        - common
-    artifacts:
-        paths:
-            - target/release/viax
-
-# build:arm64darwin:
+# build:amd64:
 #     script:
-#         - apt-get update && apt install -y python3-pip
-#         - pip3 install ziglang --break-system-packages
-#         # - apt-get update && apt-get install -y gcc-aarch64-linux-gnu
-#         - rustc --version && cargo --version
-#         - cargo install --locked cargo-zigbuild
-#         - rustup target add aarch64-apple-darwin
+#         - rustc --version && cargo --version  # Print version info for debugging
 #         - rustup target list --installed
-#         # - export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER='aarch64-linux-gnu-gcc'
-#         # - cargo build --release --target aarch64-apple-darwin
-#         - cargo zigbuild --target aarch64-apple-darwin
+#         - cargo build --release
 #     tags:
 #         - common
 #     artifacts:
 #         paths:
-#             - target/aarch64-apple-darwin/release/viax
+#             - target/release/viax
 
-build:win:
+build:arm64darwin:
     script:
-        - apt-get update && apt install -y gcc-mingw-w64-x86-64
-        - rustc --version && cargo --version  # Print version info for debugging
-        - rustup target add x86_64-pc-windows-gnu
-        - rustup toolchain install stable-x86_64-pc-windows-gnu
+        - apt-get update && apt install -y python3-pip
+        - pip3 install ziglang --break-system-packages
+        # - apt-get update && apt-get install -y gcc-aarch64-linux-gnu
+        - rustc --version && cargo --version
+        - cargo install --locked cargo-zigbuild
+        - rustup target add aarch64-apple-darwin
         - rustup target list --installed
-        - cargo build --release --target x86_64-pc-windows-gnu 
+        # - export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER='aarch64-linux-gnu-gcc'
+        # - cargo build --release --target aarch64-apple-darwin
+        - cargo zigbuild --target aarch64-apple-darwin
     tags:
         - common
     artifacts:
         paths:
-            - target/x86_64-pc-windows-gnu/release/viax.exe
+            - target/aarch64-apple-darwin/release/viax
+
+# build:win:
+#     script:
+#         - apt-get update && apt install -y gcc-mingw-w64-x86-64
+#         - rustc --version && cargo --version  # Print version info for debugging
+#         - rustup target add x86_64-pc-windows-gnu
+#         - rustup toolchain install stable-x86_64-pc-windows-gnu
+#         - rustup target list --installed
+#         - cargo build --release --target x86_64-pc-windows-gnu 
+#     tags:
+#         - common
+#     artifacts:
+#         paths:
+#             - target/x86_64-pc-windows-gnu/release/viax.exe
 
 # deploy:
 #   stage: deploy
