@@ -58,13 +58,17 @@ image: "rust:latest"
 
 build:arm64darwin:
     script:
-        - apt-get update && apt install -y python3-pip
-        - pip3 install ziglang --break-system-packages
+        # - apt-get update && apt install -y python3-pip
+        # - pip3 install ziglang --break-system-packages
         - rustc --version && cargo --version
         # - cargo install --locked cargo-zigbuild
         - rustup target add aarch64-apple-darwin
         - rustup target list --installed
         - tar -xf mac_sdk/MacOSX12.3.sdk.tar.xz --directory=mac_sdk &>/dev/null
+        - wget -q https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz
+        - tar xf zig-linux-x86_64-0.13.0.tar.xz
+        - export PATH=$PATH:`pwd`/zig-linux-x86_64-0.13.0/
+        - zig version
         - CC=`pwd`/zcc cargo build --target aarch64-apple-darwin --release
         # - export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER='aarch64-linux-gnu-gcc'
         # - cargo build --release --target aarch64-apple-darwin
