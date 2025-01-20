@@ -1,0 +1,17 @@
+[target.aarch64-apple-darwin]
+# rustc-flags = [
+  # "-L", "/home/inc/work/viax/dev/viaxcli/mac_sdk/MacOSX12.3.sdk/usr/lib",
+  # "--sysroot", "/home/inc/work/viax/dev/viaxcli/mac_sdk/MacOSX12.3.sdk",
+  # "-framework", "CoreFoundation",
+  # "-F", "/home/inc/work/viax/dev/viaxcli/mac_sdk/MacOSX12.3.sdk/System/Library/Frameworks",
+  # "-I", "/home/inc/work/viax/dev/viaxcli/mac_sdk/MacOSX12.3.sdk/usr/include"
+# ]
+linker = "/home/inc/work/viax/dev/viaxcli/zcc"
+
+# [target.aarch64-apple-darwin.rustc-flags]
+# "-L" = "`pwd`/mac_sdk/MacOSX12.3.sdk/usr/lib"
+# "--sysroot" = "/home/inc/work/viax/dev/viaxcli/mac_sdk/MacOSX12.3.sdk"
+# "-framework" = "CoreFoundation"
+# "-F" = "/home/inc/work/viax/dev/viaxcli/mac_sdk/MacOSX12.3.sdk/System/Library/Frameworks"
+# "-I" = "/home/inc/work/viax/dev/viaxcli/mac_sdk/MacOSX12.3.sdk/usr/include"
+

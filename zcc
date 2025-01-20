@@ -1,0 +1,4 @@
+#!/bin/sh
+export MACOS_SDK="`pwd`/mac_sdk/MacOSX12.3.sdk"
+zig cc --sysroot $MACOS_SDK -L/usr/lib -I$MACOS_SDK/usr/include -F$MACOS_SDK/System/Library/Frameworks -framework CoreFoundation -target aarch64-macos $@
+# /home/inc/apps/zig-linux-x86_64-0.14.0/zig cc -target aarch64-macos $@

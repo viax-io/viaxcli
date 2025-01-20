@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-cynic = { version = "3", features = ["http-surf", "rkyv"] }
+cynic = { version = "3", features = ["rkyv"] }
 
 [build-dependencies]
 cynic-codegen = { version = "3", features = ["rkyv"] }
