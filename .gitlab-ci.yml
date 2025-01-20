@@ -61,7 +61,7 @@ build:arm64darwin:
         - apt-get update && apt install -y python3-pip
         - pip3 install ziglang --break-system-packages
         - rustc --version && cargo --version
-        - cargo install --locked cargo-zigbuild
+        # - cargo install --locked cargo-zigbuild
         - rustup target add aarch64-apple-darwin
         - rustup target list --installed
         - CC=`pwd`/zcc cargo build --target aarch64-apple-darwin --release
