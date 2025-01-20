@@ -45,16 +45,16 @@ image: "rust:latest"
 #     reports:
 #       junit: $CI_PROJECT_DIR/tests/*.xml
 
-# build:amd64:
-#     script:
-#         - rustc --version && cargo --version  # Print version info for debugging
-#         - rustup target list --installed
-#         - cargo build --release
-#     tags:
-#         - common
-#     artifacts:
-#         paths:
-#             - target/release/viax
+build:amd64:
+    script:
+        - rustc --version && cargo --version
+        - rustup target list --installed
+        - cargo build --release
+    tags:
+        - common
+    artifacts:
+        paths:
+            - target/release/viax
 
 build:arm64darwin:
     script:
@@ -79,19 +79,19 @@ build:arm64darwin:
         paths:
             - target/aarch64-apple-darwin/release/viax
 
-# build:win:
-#     script:
-#         - apt-get update && apt install -y gcc-mingw-w64-x86-64
-#         - rustc --version && cargo --version  # Print version info for debugging
-#         - rustup target add x86_64-pc-windows-gnu
-#         - rustup toolchain install stable-x86_64-pc-windows-gnu
-#         - rustup target list --installed
-#         - cargo build --release --target x86_64-pc-windows-gnu 
-#     tags:
-#         - common
-#     artifacts:
-#         paths:
-#             - target/x86_64-pc-windows-gnu/release/viax.exe
+build:win:
+    script:
+        - apt-get update && apt install -y gcc-mingw-w64-x86-64
+        - rustc --version && cargo --version
+        - rustup target add x86_64-pc-windows-gnu
+        - rustup toolchain install stable-x86_64-pc-windows-gnu
+        # - rustup target list --installed
+        - cargo build --release --target x86_64-pc-windows-gnu 
+    tags:
+        - common
+    artifacts:
+        paths:
+            - target/x86_64-pc-windows-gnu/release/viax.exe
 
 # deploy:
 #   stage: deploy
