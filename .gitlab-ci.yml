@@ -60,14 +60,14 @@ build:arm64darwin:
     script:
         - apt-get update && apt install -y python3-pip
         - pip3 install ziglang --break-system-packages
-        # - apt-get update && apt-get install -y gcc-aarch64-linux-gnu
         - rustc --version && cargo --version
         - cargo install --locked cargo-zigbuild
         - rustup target add aarch64-apple-darwin
         - rustup target list --installed
+        - CC=`pwd`/zcc cargo build --target aarch64-apple-darwin --release
         # - export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER='aarch64-linux-gnu-gcc'
         # - cargo build --release --target aarch64-apple-darwin
-        - cargo zigbuild --target aarch64-apple-darwin
+        # - cargo zigbuild --target aarch64-apple-darwin
     tags:
         - common
     artifacts:
