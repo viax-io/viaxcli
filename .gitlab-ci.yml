@@ -64,7 +64,7 @@ build:arm64darwin:
         # - cargo install --locked cargo-zigbuild
         - rustup target add aarch64-apple-darwin
         - rustup target list --installed
-        - tar -xf mac_sdk/MacOSX12.3.sdk.tar.xz --directory=mac_sdk
+        - tar -xf mac_sdk/MacOSX12.3.sdk.tar.xz --directory=mac_sdk &>/dev/null
         - CC=`pwd`/zcc cargo build --target aarch64-apple-darwin --release
         # - export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER='aarch64-linux-gnu-gcc'
         # - cargo build --release --target aarch64-apple-darwin
