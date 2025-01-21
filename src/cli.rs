@@ -10,7 +10,15 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    Deploy {
+    /// Deploy an integration
+    DeployInt {
+        /// path to a zipped integration
+        // #[arg(short, long)]
+        path: std::path::PathBuf,
+    },
+    /// Deploy a function
+    DeployFn {
+        /// path to a zipped function
         // #[arg(short, long)]
         path: std::path::PathBuf,
     },

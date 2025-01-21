@@ -26,6 +26,27 @@ pub struct Function {
     // pub fun: Option<File>,
 }
 
+#[derive(cynic::QueryVariables, Debug)]
+pub struct IntDeployVariables {
+    pub file: Upload,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Mutation", variables = "IntDeployVariables")]
+pub struct IntDeploy {
+    #[arguments(input: { package: $file })]
+    pub upsert_integration_deployment: Option<IntegrationDeployment>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+pub struct IntegrationDeployment {
+    pub uid: Uuid,
+    pub name: String,
+    pub deploy_status: Option<DeployStatus>,
+    pub latest_deployment_started_at: Option<DateTime>,
+    pub enqueued_at: Option<DateTime>,
+}
+
 #[derive(cynic::QueryFragment, Debug)]
 pub struct File {
     pub name: String,

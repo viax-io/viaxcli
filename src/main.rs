@@ -4,7 +4,7 @@ pub mod cli;
 pub mod config;
 
 use crate::cli::Cli;
-use api::command_deploy;
+use api::{command_deploy_fn, command_deploy_int};
 use cli::Commands;
 use std::{error::Error, path::PathBuf};
 
@@ -28,7 +28,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let env_cfg = cfg.config(&env);
 
     match &args.command {
-        Some(Commands::Deploy { path }) => command_deploy(&cfg, env_cfg, &env, path)?,
+        Some(Commands::DeployInt { path }) => command_deploy_int(&cfg, env_cfg, &env, path)?,
+        Some(Commands::DeployFn { path }) => command_deploy_fn(&cfg, env_cfg, &env, path)?,
         None => {}
     }
 

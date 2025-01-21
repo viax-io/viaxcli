@@ -1,15 +1,17 @@
 use std::{error::Error, path::PathBuf};
 
 use crate::config::{ConfVal, ViaxConfig};
-use query::FnDeploy;
+use query::{FnDeploy, IntDeploy};
+use reqwest::blocking::Response;
 use serde::{Deserialize, Serialize};
 
-pub fn command_deploy(
+pub fn deploy(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
     env: &str,
     path: &PathBuf,
-) -> Result<(), Box<dyn Error>> {
+    operation: String,
+) -> Response {
     let req_client = reqwest::blocking::Client::new();
     let viax_api_token = acquire_token(
         &env_cfg.auth_url(&cfg.realm, env),
@@ -22,16 +24,63 @@ pub fn command_deploy(
     // let viax_api_token = std::env::var("VIAX_API_TOKEN").expect("Missing VIAX_API_TOKEN env var");
 
     let form = reqwest::blocking::multipart::Form::new()
-        .text("operations", r#"{ "operationName": "upsertFunction", "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid deployStatus version readyRevision ready latestDeploymentStartedAt latestCreatedRevision enqueuedAt } }",  "variables": {    "file": null } }"#)
+        .text("operations", operation)
         .text("map", r#"{ "File":["variables.file"] }"#)
-        .file("File", path)?;
+        .file("File", path)
+        .unwrap();
 
-    let response = req_client
+    req_client
         .post(env_cfg.api_url(&cfg.realm, env))
         .bearer_auth(format!("Bearer {}", viax_api_token.access_token))
         .multipart(form)
         .send()
-        .unwrap();
+        .unwrap()
+}
+
+pub fn command_deploy_int(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    path: &PathBuf,
+) -> Result<(), Box<dyn Error>> {
+    let response = deploy(
+        cfg,
+        env_cfg,
+        env,
+        path,
+        String::from(
+            r#"{ "operationName": "upsertIntegrationDeployment", "query": "mutation upsertIntegrationDeployment($file: Upload!) { upsertIntegrationDeployment(input: { package: $file }) { uid name deployStatus latestDeploymentStartedAt enqueuedAt } }", "variables": { "file": null } }"#,
+        ),
+    );
+
+    let data: cynic::GraphQlResponse<IntDeploy> = response.json()?;
+    let intgr = data.data.unwrap().upsert_integration_deployment.unwrap();
+
+    println!("Enqueued deployment:");
+    println!(
+        "uid: {}, deploy status: {:?}",
+        intgr.uid.0,
+        intgr.deploy_status.unwrap()
+    );
+
+    Ok(())
+}
+
+pub fn command_deploy_fn(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    path: &PathBuf,
+) -> Result<(), Box<dyn Error>> {
+    let response = deploy(
+        cfg,
+        env_cfg,
+        env,
+        path,
+        String::from(
+            r#"{ "operationName": "upsertFunction", "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid deployStatus version readyRevision ready latestDeploymentStartedAt latestCreatedRevision enqueuedAt } }", "variables": { "file": null } }"#,
+        ),
+    );
 
     let data: cynic::GraphQlResponse<FnDeploy> = response.json()?;
     let fun = data.data.unwrap().upsert_function.unwrap();
