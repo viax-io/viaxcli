@@ -70,8 +70,8 @@ jobs:
       matrix:
         include:
         - build: linux
-          os: ubuntu-latest
-          rust: nightly
+          os: ubuntu-22.04
+          rust: 1.84.0
           target: x86_64-unknown-linux-musl
           strip: x86_64-linux-musl-strip
         # - build: stable-arm-musleabi
@@ -81,15 +81,15 @@ jobs:
         #   strip: arm-linux-musleabi-strip
         - build: macos
           os: macos-latest
-          rust: nightly
+          rust: 1.84.0
           target: x86_64-apple-darwin
         - build: macos
           os: macos-latest
-          rust: nightly
+          rust: 1.84.0
           target: aarch64-apple-darwin
         - build: win-msvc
           os: windows-latest
-          rust: nightly
+          rust: 1.84.0
           target: x86_64-pc-windows-msvc
         - build: win-gnu
           os: windows-latest
@@ -106,6 +106,7 @@ jobs:
       run: |
         sudo apt-get update && sudo apt-get install -y --no-install-recommends zsh xz-utils liblz4-tool musl-tools brotli zstd libssl-dev openssl
         openssl version -d
+        echo "OPENSSL_DIR=/usr/lib/ssl" >> $GITHUB_ENV
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@master
