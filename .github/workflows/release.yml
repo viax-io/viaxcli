@@ -169,7 +169,7 @@ jobs:
     - name: Determine archive name
       shell: bash
       run: |
-        version="${{ needs.create-release.outputs.version }}"
+        version="${{ github.ref_name }}"
         echo "ARCHIVE=viax-$version-${{ matrix.target }}" >> $GITHUB_ENV
 
     - name: Creating directory for archive
@@ -202,6 +202,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: bash
       run: |
-        version="${{ needs.create-release.outputs.version }}"
-        version=$VERSION
+        version="${{ github.ref_name }}"
         gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
