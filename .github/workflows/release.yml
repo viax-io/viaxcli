@@ -104,9 +104,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       shell: bash
       run: |
-        sudo apt-get update && sudo apt-get install -y --no-install-recommends pkg-config zsh xz-utils liblz4-tool musl-tools brotli zstd libssl-dev openssl
-        openssl version -d
-        echo "OPENSSL_DIR=/usr/lib/ssl" >> $GITHUB_ENV
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends pkg-config zsh xz-utils liblz4-tool musl-tools brotli zstd libssl-dev
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@master
