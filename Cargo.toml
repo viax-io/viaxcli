@@ -17,6 +17,7 @@ viax-schema = { path = "schema" }
 query = { path = "query" }
 # curl = { version = "0.4.47", features = ["static-curl"] }
 # curl-sys = "0.4.78"
+openssl = { version = "0.10.68", features = ["vendored"] }
 
 [build-dependencies]
 cynic-codegen = { version = "3" }
