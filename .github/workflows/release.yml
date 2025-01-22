@@ -70,8 +70,8 @@ jobs:
       matrix:
         include:
         - build: linux
-          os: ubuntu-22.04
-          rust: 1.84.0
+          os: ubuntu-latest
+          rust: nightly
           target: x86_64-unknown-linux-musl
           strip: x86_64-linux-musl-strip
         # - build: stable-arm-musleabi
@@ -79,22 +79,22 @@ jobs:
         #   rust: stable
         #   target: armv7-unknown-linux-musleabi
         #   strip: arm-linux-musleabi-strip
-        - build: macos
-          os: macos-latest
-          rust: 1.84.0
-          target: x86_64-apple-darwin
-        - build: macos
-          os: macos-latest
-          rust: 1.84.0
-          target: aarch64-apple-darwin
-        - build: win-msvc
-          os: windows-latest
-          rust: 1.84.0
-          target: x86_64-pc-windows-msvc
-        - build: win-gnu
-          os: windows-latest
-          rust: nightly-x86_64-gnu
-          target: x86_64-pc-windows-gnu
+        # - build: macos
+        #   os: macos-latest
+        #   rust: 1.84.0
+        #   target: x86_64-apple-darwin
+        # - build: macos
+        #   os: macos-latest
+        #   rust: 1.84.0
+        #   target: aarch64-apple-darwin
+        # - build: win-msvc
+        #   os: windows-latest
+        #   rust: 1.84.0
+        #   target: x86_64-pc-windows-msvc
+        # - build: win-gnu
+        #   os: windows-latest
+        #   rust: nightly-x86_64-gnu
+        #   target: x86_64-pc-windows-gnu
 
     steps:
     - name: Checkout repository
