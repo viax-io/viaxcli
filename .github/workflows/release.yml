@@ -104,7 +104,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       shell: bash
       run: |
-        sudo apt-get update && sudo apt-get install -y --no-install-recommends zsh xz-utils liblz4-tool musl-tools brotli zstd libssl-dev
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends zsh xz-utils liblz4-tool musl-tools brotli zstd libssl-dev openssl
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@master
@@ -172,14 +172,14 @@ jobs:
         version="${{ needs.create-release.outputs.version }}"
         echo "ARCHIVE=ripgrep-$version-${{ matrix.target }}" >> $GITHUB_ENV
 
-    - name: Creating directory for archive
-      shell: bash
-      run: |
-        mkdir -p "$ARCHIVE"/{complete,doc}
-        cp "$BIN" "$ARCHIVE"/
-        cp {README.md,COPYING,UNLICENSE,LICENSE-MIT} "$ARCHIVE"/
-        cp {CHANGELOG.md,FAQ.md,GUIDE.md} "$ARCHIVE"/doc/
-
+    # - name: Creating directory for archive
+    #   shell: bash
+    #   run: |
+    #     mkdir -p "$ARCHIVE"/{complete,doc}
+    #     cp "$BIN" "$ARCHIVE"/
+    #     cp {README.md,COPYING,UNLICENSE,LICENSE-MIT} "$ARCHIVE"/
+    #     cp {CHANGELOG.md,FAQ.md,GUIDE.md} "$ARCHIVE"/doc/
+    #
     - name: Build archive (Windows)
       shell: bash
       if: matrix.os == 'windows-latest'
