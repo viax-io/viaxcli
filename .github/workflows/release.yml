@@ -49,7 +49,7 @@ jobs:
 
   build-release:
     name: build-release
-    # needs: ['create-release']
+    needs: ['create-release']
     runs-on: ${{ matrix.os }}
     env:
       # For some builds, we use cross to test on 32-bit and big-endian
@@ -169,7 +169,7 @@ jobs:
     - name: Determine archive name
       shell: bash
       run: |
-        version="${{ github.ref_name }}"
+        version="${{ needs.create-release.outputs.version }}"
         echo "ARCHIVE=viax-$version-${{ matrix.target }}" >> $GITHUB_ENV
 
     - name: Creating directory for archive
@@ -202,5 +202,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: bash
       run: |
-        version="${{ github.ref_name }}"
+        version="${{ needs.create-release.outputs.version }}"
         gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
