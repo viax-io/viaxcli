@@ -22,34 +22,34 @@ jobs:
   # The create-release job runs purely to initialize the GitHub release itself,
   # and names the release after the `x.y.z` tag that was pushed. It's separate
   # from building the release so that we only create the release once.
-  create-release:
-    name: create-release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # - name: Get the release version from the tag
-      #   if: env.VERSION == ''
-      #   run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-      # - name: Show the version
-      #   run: |
-      #     echo "version is: $VERSION"
-      # - name: Check that tag version and Cargo.toml version are the same
-      #   shell: bash
-      #   run: |
-      #     if ! grep -q "version = \"$VERSION\"" Cargo.toml; then
-      #       echo "version does not match Cargo.toml" >&2
-      #       exit 1
-      #     fi
-      - name: Create GitHub release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create --draft --prerelease --target main
-    outputs:
-      version: ${{ env.VERSION }}
+  # create-release:
+  #   name: create-release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - name: Get the release version from the tag
+  #     #   if: env.VERSION == ''
+  #     #   run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+  #     # - name: Show the version
+  #     #   run: |
+  #     #     echo "version is: $VERSION"
+  #     # - name: Check that tag version and Cargo.toml version are the same
+  #     #   shell: bash
+  #     #   run: |
+  #     #     if ! grep -q "version = \"$VERSION\"" Cargo.toml; then
+  #     #       echo "version does not match Cargo.toml" >&2
+  #     #       exit 1
+  #     #     fi
+  #     - name: Create GitHub release
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: gh release create --draft --prerelease --target main
+  #   outputs:
+  #     version: ${{ env.VERSION }}
 
   build-release:
     name: build-release
-    needs: ['create-release']
+    # needs: ['create-release']
     runs-on: ${{ matrix.os }}
     env:
       # For some builds, we use cross to test on 32-bit and big-endian
