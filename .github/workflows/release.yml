@@ -173,11 +173,11 @@ jobs:
         version="${{ needs.create-release.outputs.version }}"
         echo "ARCHIVE=viax-${{ matrix.target }}" >> $GITHUB_ENV
 
-    # - name: Creating directory for archive
-    #   shell: bash
-    #   run: |
-    #     mkdir -p "$ARCHIVE"/{complete,doc}
-    #     cp "$BIN" "$ARCHIVE"/
+    - name: Creating directory for archive
+      shell: bash
+      run: |
+        mkdir -p "$ARCHIVE"/{complete,doc}
+        cp "$BIN" "$ARCHIVE"/
     #     cp {README.md,COPYING,UNLICENSE,LICENSE-MIT} "$ARCHIVE"/
     #     cp {CHANGELOG.md,FAQ.md,GUIDE.md} "$ARCHIVE"/doc/
     #
@@ -199,11 +199,11 @@ jobs:
         echo "ASSET=$ARCHIVE.tar.gz" >> $GITHUB_ENV
         echo "ASSET_SUM=$ARCHIVE.tar.gz.sha256" >> $GITHUB_ENV
 
-    - name: Upload release archive
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      shell: bash
-      run: |
+    # - name: Upload release archive
+      # env:
+        # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # shell: bash
+      # run: |
         # version="${{ needs.create-release.outputs.version }}"
-        version="0.1.0"
-        gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
+        # version="0.1.0"
+        # gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
