@@ -1,10 +1,19 @@
-// use cynic;
 use viax_schema::viax as schema;
 
 #[derive(cynic::QueryVariables, Debug)]
+pub struct FnMgmntVariables<'a> {
+    pub name: Option<&'a str>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Query", variables = "FnMgmntVariables")]
+pub struct FnMgmnt {
+    #[arguments(name: $name)]
+    pub get_function: Option<Function>,
+}
+#[derive(cynic::QueryVariables, Debug)]
 pub struct FnDeployVariables {
     pub file: Upload,
-    pub uid: Uuid,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -12,6 +21,16 @@ pub struct FnDeployVariables {
 pub struct FnDeploy {
     #[arguments(input: { fun: $file })]
     pub upsert_function: Option<Function>,
+}
+
+#[derive(cynic::QueryVariables, Debug)]
+pub struct FnDeleteVariables {
+    pub uid: Uuid,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Mutation", variables = "FnDeleteVariables")]
+pub struct FnDelete {
     #[arguments(uid: $uid)]
     pub delete_function: Option<Function>,
 }
@@ -28,6 +47,24 @@ pub struct Function {
     pub latest_created_revision: Option<String>,
     pub enqueued_at: Option<DateTime>,
     // pub fun: Option<File>,
+}
+
+#[derive(cynic::QueryVariables, Debug)]
+pub struct IntGetVariables<'a> {
+    pub name: Option<&'a str>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Query", variables = "IntGetVariables")]
+pub struct IntDeployGet {
+    #[arguments(name: $name)]
+    pub get_integration_deployment: Option<IntegrationDeployment>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Query")]
+pub struct IntGet {
+    pub get_integrations: Option<Vec<Option<Integration>>>,
 }
 
 #[derive(cynic::QueryVariables, Debug)]
@@ -87,28 +124,3 @@ pub struct Uuid(pub String);
 
 #[derive(cynic::Scalar, Debug, Clone)]
 pub struct Upload(pub String);
-
-#[derive(cynic::QueryVariables, Debug)]
-pub struct IntMgmtVariables<'a> {
-    pub name: Option<&'a str>,
-}
-
-#[derive(cynic::QueryFragment, Debug)]
-#[cynic(graphql_type = "Query", variables = "IntMgmtVariables")]
-pub struct IntMgmt {
-    pub get_integrations: Option<Vec<Option<Integration>>>,
-    #[arguments(name: $name)]
-    pub get_integration_deployment: Option<IntegrationDeployment>,
-}
-
-#[derive(cynic::QueryVariables, Debug)]
-pub struct FnMgmntVariables<'a> {
-    pub name: Option<&'a str>,
-}
-
-#[derive(cynic::QueryFragment, Debug)]
-#[cynic(graphql_type = "Query", variables = "FnMgmntVariables")]
-pub struct FnMgmnt {
-    #[arguments(name: $name)]
-    pub get_function: Option<Function>,
-}

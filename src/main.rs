@@ -4,7 +4,7 @@ pub mod cli;
 pub mod config;
 
 use crate::cli::Cli;
-use api::{command_deploy_fn, command_deploy_int, get_fn};
+use api::{command_deploy_fn, command_deploy_int, delete_fn, get_fn};
 use cli::{Commands, FnCommands, IntCommands};
 use std::{error::Error, path::PathBuf};
 
@@ -42,9 +42,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 get_fn(&cfg, env_cfg, &env, name)?;
             }
             FnCommands::Deploy { path } => command_deploy_fn(&cfg, env_cfg, &env, path)?,
-            FnCommands::Delete { name } => {
-                println!("{:?}", name);
-            }
+            FnCommands::Delete { name } => delete_fn(&cfg, env_cfg, &env, name)?,
         },
     };
 

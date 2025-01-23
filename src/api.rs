@@ -1,27 +1,67 @@
 use std::{error::Error, path::PathBuf};
 
 use crate::config::{ConfVal, ViaxConfig};
-use cynic::QueryBuilder;
-use query::{FnDeploy, FnMgmnt, FnMgmntVariables, Function, IntDeploy};
-use reqwest::blocking::Response;
+use cynic::{MutationBuilder, QueryBuilder};
+use query::{
+    FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, IntDeploy, Uuid,
+};
+use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
 
-pub fn get_fn(
+pub fn delete_fn(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
     env: &str,
     name: &str,
-) -> Result<Function, Box<dyn Error>> {
+) -> Result<(), Box<dyn Error>> {
     use cynic::http::ReqwestBlockingExt;
 
     let req_client = reqwest::blocking::Client::new();
     let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
 
-    let q = FnMgmnt::build(FnMgmntVariables { name: Some(name) });
+    let fun = get_fn_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token).unwrap();
 
-    let response = reqwest::blocking::Client::new()
+    let uid = fun.uid;
+    let q = FnDelete::build(FnDeleteVariables {
+        uid: Uuid(String::from(&uid.0)),
+    });
+
+    let response = req_client
         .post(env_cfg.api_url(&cfg.realm, env))
         .bearer_auth(viax_api_token)
+        .run_graphql(q)
+        .unwrap();
+
+    if response.errors.is_some() {
+        Err(format!(
+            "Failed to delete fn {name}, uid='{:?}', errors: {:?}",
+            &uid.0,
+            response.errors.unwrap()
+        ))?
+    } else {
+        let fnmgmt = response.data.unwrap();
+        let fun = fnmgmt.delete_function.unwrap();
+        println!("{:<30} {:<10}", "NAME", "DEPLOY_STATUS");
+        println!("{:<30} {:<10?}", fun.name, fun.deploy_status.unwrap());
+        Ok(())
+    }
+}
+
+pub fn get_fn_with_token(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    req_client: &Client,
+    name: &str,
+    api_token: &str,
+) -> Result<Function, Box<dyn Error>> {
+    use cynic::http::ReqwestBlockingExt;
+
+    let q = FnMgmnt::build(FnMgmntVariables { name: Some(name) });
+
+    let response = req_client
+        .post(env_cfg.api_url(&cfg.realm, env))
+        .bearer_auth(api_token)
         .run_graphql(q)
         .unwrap();
 
@@ -36,11 +76,32 @@ pub fn get_fn(
             Err(format!("Function '{name}' not found"))?
         }
         let fun = fnmgmt.get_function.unwrap();
-        println!("{:<30} {:<10}", "NAME", "READY");
+        println!(
+            "{:<30} {:<10} {:<10} {:<10}",
+            "NAME", "READY", "VERSION", "REVISION"
+        );
         let ready = &fun.ready;
-        println!("{:<30} {:<10}", fun.name, ready.as_ref().unwrap());
+        println!(
+            "{:<30} {:<10} {:<10} {:<10}",
+            fun.name,
+            ready.as_ref().unwrap(),
+            &fun.version.as_ref().unwrap(),
+            &fun.ready_revision.as_ref().unwrap()
+        );
         Ok(fun)
     }
+}
+
+pub fn get_fn(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    name: &str,
+) -> Result<Function, Box<dyn Error>> {
+    let req_client = reqwest::blocking::Client::new();
+    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
+
+    get_fn_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token)
 }
 
 pub fn deploy(
