@@ -16,7 +16,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut config_path = PathBuf::from(user_dir.home_dir());
     config_path.push(".viax/config");
     let cfg: ViaxConfig = confy::load_path(config_path.as_path())?;
-    // println!("viax config '{:?}' created, path: {:#?}", cfg, config_path);
 
     let args = Cli::parse();
     // println!("path: {:#?}", args);

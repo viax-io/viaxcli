@@ -20,7 +20,6 @@ pub fn deploy(
         &cfg.realm,
         &req_client,
     );
-    // println!("api token: {:?}", viax_api_token);
     // let viax_api_token = std::env::var("VIAX_API_TOKEN").expect("Missing VIAX_API_TOKEN env var");
 
     let form = reqwest::blocking::multipart::Form::new()
@@ -126,14 +125,3 @@ fn acquire_token(
         .send();
     response.unwrap().json().unwrap()
 }
-
-// let q = FnMgmnt::build(FnMgmntVariables {
-//     name: Some("my-fun"),
-// });
-// let response = req_client
-//     .post("https://api.viax.lab.viax.tech/graphql")
-//     .bearer_auth(format!("Bearer {}", viax_api_token.access_token))
-//     .json(&q)
-//     .send()
-//     .unwrap();
-// println!("response >>> {:#?}", response.text()?);
