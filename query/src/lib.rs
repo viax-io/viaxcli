@@ -70,7 +70,6 @@ pub struct IntGet {
 #[derive(cynic::QueryVariables, Debug)]
 pub struct IntDeployVariables {
     pub file: Upload,
-    pub uid: Uuid,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -78,6 +77,16 @@ pub struct IntDeployVariables {
 pub struct IntDeploy {
     #[arguments(input: { package: $file })]
     pub upsert_integration_deployment: Option<IntegrationDeployment>,
+}
+
+#[derive(cynic::QueryVariables, Debug)]
+pub struct IntDeleteVariables {
+    pub uid: Uuid,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Mutation", variables = "IntDeleteVariables")]
+pub struct IntDelete {
     #[arguments(uid: $uid)]
     pub delete_integration_deployment: Option<IntegrationDeployment>,
 }

@@ -1,18 +1,13 @@
-// pub mod api;
 pub mod cli;
-// pub mod config;
 
 use crate::cli::Cli;
 use api::fun::{command_deploy_fn, delete_fn, get_fn};
-use api::int::command_deploy_int;
-// use api::{command_deploy_fn, command_deploy_int, delete_fn, get_fn};
+use api::int::{command_deploy_int, delete_int, get_int};
 use cli::{Commands, FnCommands, IntCommands};
 use std::{error::Error, path::PathBuf};
 use viax_config::config::ViaxConfig;
 
 use clap::Parser;
-
-// use config::ViaxConfig;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let user_dir = directories::UserDirs::new().unwrap();
@@ -32,12 +27,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     match &args.command {
         Commands::Int { command } => match command {
             IntCommands::Get { name } => {
-                println!("{:?}", name);
+                get_int(&cfg, env_cfg, &env, name)?;
             }
             IntCommands::Deploy { path } => command_deploy_int(&cfg, env_cfg, &env, path)?,
-            IntCommands::Delete { name } => {
-                println!("{:?}", name);
-            }
+            IntCommands::Delete { name } => delete_int(&cfg, env_cfg, &env, name)?,
         },
 
         Commands::Fn { command } => match command {

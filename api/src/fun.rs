@@ -75,7 +75,6 @@ pub fn get_fn_with_token(
             Err(format!("Function '{name}' not found"))?
         }
         let fun = fnmgmt.get_function.unwrap();
-        display_fn(&fun);
         Ok(fun)
     }
 }
@@ -89,7 +88,11 @@ pub fn get_fn(
     let req_client = reqwest::blocking::Client::new();
     let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
 
-    get_fn_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token)
+    let fun_result = get_fn_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token);
+    if let Ok(ref fun) = fun_result {
+        display_fn(fun);
+    }
+    fun_result
 }
 
 pub fn command_deploy_fn(
@@ -130,12 +133,12 @@ pub fn command_deploy_fn(
 
 fn display_fn(fun: &Function) {
     println!(
-        "{:<30} {:<5} {:<13} {:<8} {:<10}",
+        "{:<30} {:<5} {:<20} {:<8} {:<10}",
         "NAME", "READY", "DEPLOY_STATUS", "VERSION", "REVISION"
     );
     let ready = &fun.ready;
     println!(
-        "{:<30} {:<5} {:<13} {:<8} {:<10}",
+        "{:<30} {:<5} {:<20} {:<8} {:<10}",
         fun.name,
         ready.as_ref().unwrap(),
         format!("{:?}", &fun.deploy_status.as_ref().unwrap()),
