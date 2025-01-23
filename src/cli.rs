@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -5,21 +7,51 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     pub env: Option<String>,
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Commands,
 }
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    /// Deploy an integration
-    DeployInt {
-        /// path to a zipped integration
-        // #[arg(short, long)]
-        path: std::path::PathBuf,
+    /// Functions management commands
+    Fn {
+        #[command(subcommand)]
+        command: FnCommands,
     },
+    /// Inegrations management commands
+    Int {
+        #[command(subcommand)]
+        command: IntCommands,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum IntCommands {
+    /// Deploy a integration
+    Deploy {
+        /// path to a zipped integration
+        path: PathBuf,
+    },
+    /// Get a integration
+    Get {
+        name: String,
+    },
+    Delete {
+        name: String,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum FnCommands {
     /// Deploy a function
-    DeployFn {
+    Deploy {
         /// path to a zipped function
-        // #[arg(short, long)]
-        path: std::path::PathBuf,
+        path: PathBuf,
+    },
+    /// Get a function
+    Get {
+        name: String,
+    },
+    Delete {
+        name: String,
     },
 }

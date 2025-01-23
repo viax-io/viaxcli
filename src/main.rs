@@ -4,8 +4,8 @@ pub mod cli;
 pub mod config;
 
 use crate::cli::Cli;
-use api::{command_deploy_fn, command_deploy_int};
-use cli::Commands;
+use api::{command_deploy_fn, command_deploy_int, get_fn};
+use cli::{Commands, FnCommands, IntCommands};
 use std::{error::Error, path::PathBuf};
 
 use clap::Parser;
@@ -27,10 +27,26 @@ fn main() -> Result<(), Box<dyn Error>> {
     let env_cfg = cfg.config(&env);
 
     match &args.command {
-        Some(Commands::DeployInt { path }) => command_deploy_int(&cfg, env_cfg, &env, path)?,
-        Some(Commands::DeployFn { path }) => command_deploy_fn(&cfg, env_cfg, &env, path)?,
-        None => {}
-    }
+        Commands::Int { command } => match command {
+            IntCommands::Get { name } => {
+                println!("{:?}", name);
+            }
+            IntCommands::Deploy { path } => command_deploy_int(&cfg, env_cfg, &env, path)?,
+            IntCommands::Delete { name } => {
+                println!("{:?}", name);
+            }
+        },
+
+        Commands::Fn { command } => match command {
+            FnCommands::Get { name } => {
+                get_fn(&cfg, env_cfg, &env, name)?;
+            }
+            FnCommands::Deploy { path } => command_deploy_fn(&cfg, env_cfg, &env, path)?,
+            FnCommands::Delete { name } => {
+                println!("{:?}", name);
+            }
+        },
+    };
 
     Ok(())
 }

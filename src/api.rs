@@ -1,9 +1,48 @@
 use std::{error::Error, path::PathBuf};
 
 use crate::config::{ConfVal, ViaxConfig};
-use query::{FnDeploy, IntDeploy};
+use cynic::QueryBuilder;
+use query::{FnDeploy, FnMgmnt, FnMgmntVariables, IntDeploy};
 use reqwest::blocking::Response;
 use serde::{Deserialize, Serialize};
+
+pub fn get_fn(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    name: &str,
+) -> Result<(), Box<dyn Error>> {
+    use cynic::http::ReqwestBlockingExt;
+
+    let req_client = reqwest::blocking::Client::new();
+    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
+
+    let q = FnMgmnt::build(FnMgmntVariables { name: Some(name) });
+
+    let response = reqwest::blocking::Client::new()
+        .post(env_cfg.api_url(&cfg.realm, env))
+        .bearer_auth(viax_api_token)
+        // .header("Authorization", viax_api_token)
+        .run_graphql(q)
+        .unwrap();
+
+    if response.errors.is_some() {
+        println!(
+            "Failed to get fn {name}, errors: {:?}",
+            response.errors.unwrap()
+        )
+    } else {
+        let fnmgmt = response.data.unwrap();
+        if fnmgmt.get_function.is_none() {
+            Err(format!("Function '{name}' not found"))?;
+        }
+        let fun = fnmgmt.get_function.unwrap();
+        println!("{:<30} {:<10}", "NAME", "READY");
+        println!("{:<30} {:<10}", fun.name, fun.ready.unwrap());
+    }
+
+    Ok(())
+}
 
 pub fn deploy(
     cfg: &ViaxConfig,
@@ -13,13 +52,7 @@ pub fn deploy(
     operation: String,
 ) -> Response {
     let req_client = reqwest::blocking::Client::new();
-    let viax_api_token = acquire_token(
-        &env_cfg.auth_url(&cfg.realm, env),
-        &env_cfg.client_id,
-        &env_cfg.client_secret,
-        &cfg.realm,
-        &req_client,
-    );
+    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
     // let viax_api_token = std::env::var("VIAX_API_TOKEN").expect("Missing VIAX_API_TOKEN env var");
 
     let form = reqwest::blocking::multipart::Form::new()
@@ -30,7 +63,7 @@ pub fn deploy(
 
     req_client
         .post(env_cfg.api_url(&cfg.realm, env))
-        .bearer_auth(format!("Bearer {}", viax_api_token.access_token))
+        .bearer_auth(viax_api_token)
         .multipart(form)
         .send()
         .unwrap()
@@ -77,7 +110,7 @@ pub fn command_deploy_fn(
         env,
         path,
         String::from(
-            r#"{ "operationName": "upsertFunction", "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid deployStatus version readyRevision ready latestDeploymentStartedAt latestCreatedRevision enqueuedAt } }", "variables": { "file": null } }"#,
+            r#"{ "operationName": "upsertFunction", "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid name deployStatus version readyRevision ready latestDeploymentStartedAt latestCreatedRevision enqueuedAt } }", "variables": { "file": null } }"#,
         ),
     );
 
@@ -107,12 +140,16 @@ struct ApiToken {
 }
 
 fn acquire_token(
-    url: &str,
-    client_id: &str,
-    client_secret: &str,
+    env_cfg: &ConfVal,
     realm: &str,
+    env: &str,
     client: &reqwest::blocking::Client,
-) -> ApiToken {
+) -> String {
+    let url = env_cfg.auth_url(realm, env);
+    let client_id = &env_cfg.client_id;
+    let client_secret = &env_cfg.client_secret;
+    let grant_type = "client_credentials".to_string();
+
     let response = client
         .post(format!(
             "{url}/realms/{realm}/protocol/openid-connect/token",
@@ -120,8 +157,15 @@ fn acquire_token(
         .form(&[
             ("client_id", client_id),
             ("client_secret", client_secret),
-            ("grant_type", "client_credentials"),
+            ("grant_type", &grant_type),
         ])
         .send();
-    response.unwrap().json().unwrap()
+
+    if response.is_err() {
+        println!("Failed to get access_token, {:#?}", response);
+        panic!()
+    }
+
+    let viax_api_token: ApiToken = response.unwrap().json().unwrap();
+    format!("Bearer {}", viax_api_token.access_token)
 }

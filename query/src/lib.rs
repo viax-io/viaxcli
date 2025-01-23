@@ -16,6 +16,7 @@ pub struct FnDeploy {
 #[derive(cynic::QueryFragment, Debug)]
 pub struct Function {
     pub uid: Uuid,
+    pub name: String,
     pub deploy_status: Option<DeployStatus>,
     pub version: Option<String>,
     pub ready_revision: Option<String>,
