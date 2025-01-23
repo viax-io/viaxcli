@@ -2,7 +2,7 @@ use std::{error::Error, path::PathBuf};
 
 use crate::config::{ConfVal, ViaxConfig};
 use cynic::QueryBuilder;
-use query::{FnDeploy, FnMgmnt, FnMgmntVariables, IntDeploy};
+use query::{FnDeploy, FnMgmnt, FnMgmntVariables, Function, IntDeploy};
 use reqwest::blocking::Response;
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +11,7 @@ pub fn get_fn(
     env_cfg: &ConfVal,
     env: &str,
     name: &str,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<Function, Box<dyn Error>> {
     use cynic::http::ReqwestBlockingExt;
 
     let req_client = reqwest::blocking::Client::new();
@@ -22,26 +22,25 @@ pub fn get_fn(
     let response = reqwest::blocking::Client::new()
         .post(env_cfg.api_url(&cfg.realm, env))
         .bearer_auth(viax_api_token)
-        // .header("Authorization", viax_api_token)
         .run_graphql(q)
         .unwrap();
 
     if response.errors.is_some() {
-        println!(
+        Err(format!(
             "Failed to get fn {name}, errors: {:?}",
             response.errors.unwrap()
-        )
+        ))?
     } else {
         let fnmgmt = response.data.unwrap();
         if fnmgmt.get_function.is_none() {
-            Err(format!("Function '{name}' not found"))?;
+            Err(format!("Function '{name}' not found"))?
         }
         let fun = fnmgmt.get_function.unwrap();
         println!("{:<30} {:<10}", "NAME", "READY");
-        println!("{:<30} {:<10}", fun.name, fun.ready.unwrap());
+        let ready = &fun.ready;
+        println!("{:<30} {:<10}", fun.name, ready.as_ref().unwrap());
+        Ok(fun)
     }
-
-    Ok(())
 }
 
 pub fn deploy(

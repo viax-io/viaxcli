@@ -4,6 +4,7 @@ use viax_schema::viax as schema;
 #[derive(cynic::QueryVariables, Debug)]
 pub struct FnDeployVariables {
     pub file: Upload,
+    pub uid: Uuid,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -11,6 +12,8 @@ pub struct FnDeployVariables {
 pub struct FnDeploy {
     #[arguments(input: { fun: $file })]
     pub upsert_function: Option<Function>,
+    #[arguments(uid: $uid)]
+    pub delete_function: Option<Function>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -30,6 +33,7 @@ pub struct Function {
 #[derive(cynic::QueryVariables, Debug)]
 pub struct IntDeployVariables {
     pub file: Upload,
+    pub uid: Uuid,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -37,6 +41,8 @@ pub struct IntDeployVariables {
 pub struct IntDeploy {
     #[arguments(input: { package: $file })]
     pub upsert_integration_deployment: Option<IntegrationDeployment>,
+    #[arguments(uid: $uid)]
+    pub delete_integration_deployment: Option<IntegrationDeployment>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -46,6 +52,12 @@ pub struct IntegrationDeployment {
     pub deploy_status: Option<DeployStatus>,
     pub latest_deployment_started_at: Option<DateTime>,
     pub enqueued_at: Option<DateTime>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+pub struct Integration {
+    pub name: Option<String>,
+    pub phase: Option<String>,
 }
 
 #[derive(cynic::QueryFragment, Debug)]
@@ -75,6 +87,19 @@ pub struct Uuid(pub String);
 
 #[derive(cynic::Scalar, Debug, Clone)]
 pub struct Upload(pub String);
+
+#[derive(cynic::QueryVariables, Debug)]
+pub struct IntMgmtVariables<'a> {
+    pub name: Option<&'a str>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Query", variables = "IntMgmtVariables")]
+pub struct IntMgmt {
+    pub get_integrations: Option<Vec<Option<Integration>>>,
+    #[arguments(name: $name)]
+    pub get_integration_deployment: Option<IntegrationDeployment>,
+}
 
 #[derive(cynic::QueryVariables, Debug)]
 pub struct FnMgmntVariables<'a> {
