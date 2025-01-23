@@ -41,8 +41,7 @@ pub fn delete_fn(
     } else {
         let fnmgmt = response.data.unwrap();
         let fun = fnmgmt.delete_function.unwrap();
-        println!("{:<30} {:<10}", "NAME", "DEPLOY_STATUS");
-        println!("{:<30} {:<10?}", fun.name, fun.deploy_status.unwrap());
+        display_fn(&fun);
         Ok(())
     }
 }
@@ -76,18 +75,7 @@ pub fn get_fn_with_token(
             Err(format!("Function '{name}' not found"))?
         }
         let fun = fnmgmt.get_function.unwrap();
-        println!(
-            "{:<30} {:<10} {:<10} {:<10}",
-            "NAME", "READY", "VERSION", "REVISION"
-        );
-        let ready = &fun.ready;
-        println!(
-            "{:<30} {:<10} {:<10} {:<10}",
-            fun.name,
-            ready.as_ref().unwrap(),
-            &fun.version.as_ref().unwrap(),
-            &fun.ready_revision.as_ref().unwrap()
-        );
+        display_fn(&fun);
         Ok(fun)
     }
 }
@@ -192,6 +180,22 @@ pub fn command_deploy_fn(
     );
 
     Ok(())
+}
+
+fn display_fn(fun: &Function) {
+    println!(
+        "{:<30} {:<5} {:<13} {:<8} {:<10}",
+        "NAME", "READY", "DEPLOY_STATUS", "VERSION", "REVISION"
+    );
+    let ready = &fun.ready;
+    println!(
+        "{:<30} {:<5} {:<13} {:<8} {:<10}",
+        fun.name,
+        ready.as_ref().unwrap(),
+        format!("{:?}", &fun.deploy_status.as_ref().unwrap()),
+        &fun.version.as_ref().unwrap(),
+        &fun.ready_revision.as_ref().unwrap()
+    );
 }
 
 #[derive(Debug, Serialize, Deserialize)]
