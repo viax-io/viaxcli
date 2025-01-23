@@ -1,12 +1,12 @@
+use crate::api::deploy;
+use crate::auth::acquire_token;
 use std::{error::Error, path::PathBuf};
 
-use crate::config::{ConfVal, ViaxConfig};
 use cynic::{MutationBuilder, QueryBuilder};
-use query::{
-    FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, IntDeploy, Uuid,
-};
-use reqwest::blocking::{Client, Response};
-use serde::{Deserialize, Serialize};
+use query::{FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, Uuid};
+use reqwest::blocking::Client;
+use viax_config::config::ConfVal;
+use viax_config::config::ViaxConfig;
 
 pub fn delete_fn(
     cfg: &ViaxConfig,
@@ -92,60 +92,6 @@ pub fn get_fn(
     get_fn_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token)
 }
 
-pub fn deploy(
-    cfg: &ViaxConfig,
-    env_cfg: &ConfVal,
-    env: &str,
-    path: &PathBuf,
-    operation: String,
-) -> Response {
-    let req_client = reqwest::blocking::Client::new();
-    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
-    // let viax_api_token = std::env::var("VIAX_API_TOKEN").expect("Missing VIAX_API_TOKEN env var");
-
-    let form = reqwest::blocking::multipart::Form::new()
-        .text("operations", operation)
-        .text("map", r#"{ "File":["variables.file"] }"#)
-        .file("File", path)
-        .unwrap();
-
-    req_client
-        .post(env_cfg.api_url(&cfg.realm, env))
-        .bearer_auth(viax_api_token)
-        .multipart(form)
-        .send()
-        .unwrap()
-}
-
-pub fn command_deploy_int(
-    cfg: &ViaxConfig,
-    env_cfg: &ConfVal,
-    env: &str,
-    path: &PathBuf,
-) -> Result<(), Box<dyn Error>> {
-    let response = deploy(
-        cfg,
-        env_cfg,
-        env,
-        path,
-        String::from(
-            r#"{ "operationName": "upsertIntegrationDeployment", "query": "mutation upsertIntegrationDeployment($file: Upload!) { upsertIntegrationDeployment(input: { package: $file }) { uid name deployStatus latestDeploymentStartedAt enqueuedAt } }", "variables": { "file": null } }"#,
-        ),
-    );
-
-    let data: cynic::GraphQlResponse<IntDeploy> = response.json()?;
-    let intgr = data.data.unwrap().upsert_integration_deployment.unwrap();
-
-    println!("Enqueued deployment:");
-    println!(
-        "uid: {}, deploy status: {:?}",
-        intgr.uid.0,
-        intgr.deploy_status.unwrap()
-    );
-
-    Ok(())
-}
-
 pub fn command_deploy_fn(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
@@ -196,40 +142,4 @@ fn display_fn(fun: &Function) {
         &fun.version.as_ref().unwrap(),
         &fun.ready_revision.as_ref().unwrap()
     );
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ApiToken {
-    access_token: String,
-}
-
-fn acquire_token(
-    env_cfg: &ConfVal,
-    realm: &str,
-    env: &str,
-    client: &reqwest::blocking::Client,
-) -> String {
-    let url = env_cfg.auth_url(realm, env);
-    let client_id = &env_cfg.client_id;
-    let client_secret = &env_cfg.client_secret;
-    let grant_type = "client_credentials".to_string();
-
-    let response = client
-        .post(format!(
-            "{url}/realms/{realm}/protocol/openid-connect/token",
-        ))
-        .form(&[
-            ("client_id", client_id),
-            ("client_secret", client_secret),
-            ("grant_type", &grant_type),
-        ])
-        .send();
-
-    if response.is_err() {
-        println!("Failed to get access_token, {:#?}", response);
-        panic!()
-    }
-
-    let viax_api_token: ApiToken = response.unwrap().json().unwrap();
-    format!("Bearer {}", viax_api_token.access_token)
 }

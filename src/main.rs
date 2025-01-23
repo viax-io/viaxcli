@@ -1,15 +1,18 @@
-pub mod api;
-#[warn(dead_code)]
+// pub mod api;
 pub mod cli;
-pub mod config;
+// pub mod config;
 
 use crate::cli::Cli;
-use api::{command_deploy_fn, command_deploy_int, delete_fn, get_fn};
+use api::fun::{command_deploy_fn, delete_fn, get_fn};
+use api::int::command_deploy_int;
+// use api::{command_deploy_fn, command_deploy_int, delete_fn, get_fn};
 use cli::{Commands, FnCommands, IntCommands};
 use std::{error::Error, path::PathBuf};
+use viax_config::config::ViaxConfig;
 
 use clap::Parser;
-use config::ViaxConfig;
+
+// use config::ViaxConfig;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let user_dir = directories::UserDirs::new().unwrap();
