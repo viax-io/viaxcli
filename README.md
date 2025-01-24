@@ -66,7 +66,7 @@ send-email-task                True  Ready                1.0.0    send-email-ta
 To deploy a function you need to zip it beforehand (there is a plan to zip on the fly in future):
 ```
 $ cd my-fun
-$ zip -r int.zip .
+$ zip -r fn.zip .
 $ viax fn deploy fn.zip
 Enqueued deployment:
 uid: 679342d0-6b1d-44a4-aa02-47a485cd1128, deploy status: EnqueuedDeploying
