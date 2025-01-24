@@ -63,7 +63,7 @@ NAME                           READY DEPLOY_STATUS        VERSION  REVISION
 send-email-task                True  Ready                1.0.0    send-email-task-00005
 ```
 
-To deploy a function you a to zip it beforehand (there is a plan to zip on the fly in future):
+To deploy a function you need to zip it beforehand (there is a plan to zip on the fly in future):
 ```
 $ cd my-fun
 $ zip -r int.zip .
