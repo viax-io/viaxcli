@@ -52,6 +52,8 @@ Optional, if not specified it is built from a pattern:
 * auth_url - pattern for a default one `https://auth.{realm}.{env}.viax.io`
 * api_url patter for a default url `https://api.{realm}.{env}.viax.io/graphql`
 
+Note: if you are on macos, after you download a binary run `xattr -c viax` or allow execution through "Settings -> Privacy & Security".
+
 # Examples
 
 Get a function:
