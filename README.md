@@ -2,8 +2,8 @@ viax cli
 ------------
 
 A CLI tool to manage state of viax cloud. It includes:
-* det/deploy/delete functions
-* det/deploy/delete integrations
+* get/deploy/delete functions
+* get/deploy/delete integrations
 
 To see what is available at the moment run:
 ```
