@@ -2,19 +2,19 @@ viax cli
 ------------
 
 A CLI tool to manage state of viax cloud. It includes:
-* deploy functions
-* deploy integrations
+* det/deploy/delete functions
+* det/deploy/delete integrations
 
 To see what is available at the moment run:
 ```
 $ viax help
 
-Usage: viax [ENV] [COMMAND]
+Usage: viax [ENV] <COMMAND>
 
 Commands:
-  deploy-int  Deploy an integration
-  deploy-fn   Deploy a function
-  help        Print this message or the help of the given subcommand(s)
+  fn    Functions management commands
+  int   Inegrations management commands
+  help  Print this message or the help of the given subcommand(s)
 
 Arguments:
   [ENV]
@@ -25,9 +25,9 @@ Options:
 ```
 
 Roadmap:
-* full management of funcitons and integrations: delete/deploy/getinfo
 * generate a function project
 * generate an integration project
+* manage viax configurations
 * to be added
 
 # Configuration
@@ -52,3 +52,22 @@ Optional, if not specified it is built from a pattern:
 * auth_url - pattern for a default one `https://auth.{realm}.{env}.viax.io`
 * api_url patter for a default url `https://api.{realm}.{env}.viax.io/graphql`
 
+# Examples
+
+Get a function:
+```
+$ viax fn get send-email-task
+NAME                           READY DEPLOY_STATUS        VERSION  REVISION
+send-email-task                True  Ready                1.0.0    send-email-task-00005
+```
+
+To deploy a function you a to zip it beforehand (there is a plan to zip on the fly in future):
+```
+$ cd my-fun
+$ zip -r int.zip .
+$ viax fn deploy fn.zip
+Enqueued deployment:
+uid: 679342d0-6b1d-44a4-aa02-47a485cd1128, deploy status: EnqueuedDeploying
+Note: last deployed function will be working until new function is deployed. Previously deployed:
+ready: Unknown, revision: Unknown
+```
