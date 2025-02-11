@@ -51,6 +51,9 @@ pub enum FnCommands {
     Get {
         name: String,
     },
+    Create {
+        lang: String,
+    },
     Delete {
         name: String,
     },

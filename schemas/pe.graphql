@@ -4828,10 +4828,6 @@ type Function implements Auditable & Model & Node {
   *@incubating*
   """
   version: String
-  """
-  *@experimental*
-  """
-  wMetadata: WileyFunctionMetadata
 }
 
 type FunctionConnection {
@@ -4867,7 +4863,6 @@ input FunctionInput {
   url: Url
   urn: Urn
   version: String
-  wMetadata: WileyFunctionMetadataInput
 }
 
 """
@@ -8414,7 +8409,6 @@ input ModelInput {
   _viaxUrbanPropertyAddress: ViaxUrbanPropertyAddressInput
   _viewConfig: ViewConfigInput
   _wasmFunction: WasmFunctionInput
-  _wileyFunctionMetadata: WileyFunctionMetadataInput
   allowedToModifyFor: [UUID!]
   createdAt: DateTime
   createdBy: DigitalIdentityInput
@@ -8678,14 +8672,6 @@ type Mutation {
   """
   *@experimental*
   """
-  batchDeleteWileyFunctionMetadata(
-    _input: [WileyFunctionMetadataReferenceInput!]
-    _locale: LanguageTag
-    _speculative: Boolean
-  ): WileyFunctionMetadataConnection
-  """
-  *@experimental*
-  """
   cancelActiveReplayMessagesJob: String
   """
   *@incubating*
@@ -8918,14 +8904,6 @@ type Mutation {
   """
   createWasmFunction(input: WasmFunctionInput): WasmFunction
   """
-  *@experimental*
-  """
-  createWileyFunctionMetadata(
-    _locale: LanguageTag
-    _speculative: Boolean
-    input: WileyFunctionMetadataInput
-  ): WileyFunctionMetadata
-  """
   *@incubating*
   """
   deleteCountry(
@@ -9063,15 +9041,6 @@ type Mutation {
     id: WasmFunctionReferenceInput
     input: WasmFunctionInput
   ): WasmFunction
-  """
-  *@experimental*
-  """
-  deleteWileyFunctionMetadata(
-    _locale: LanguageTag
-    _speculative: Boolean
-    id: WileyFunctionMetadataReferenceInput
-    input: WileyFunctionMetadataInput
-  ): WileyFunctionMetadata
   """
   *@incubating*
   """
@@ -9312,17 +9281,6 @@ type Mutation {
   """
   updateWasmFunction(input: WasmFunctionInput): WasmFunction
   """
-  *@experimental*
-  """
-  updateWileyFunctionMetadata(
-    _actions: [UpdateWileyFunctionMetadataActionInput!]
-    _locale: LanguageTag
-    _speculative: Boolean
-    id: WileyFunctionMetadataReferenceInput
-    input: WileyFunctionMetadataInput
-    pk: PKRef
-  ): WileyFunctionMetadata
-  """
   *@incubating*
   """
   upsertCronTrigger(_locale: LanguageTag, _speculative: Boolean, input: CronTriggerInput): CronTrigger
@@ -9362,14 +9320,6 @@ type Mutation {
   *@experimental*
   """
   upsertWasmFunction(input: WasmFunctionInput): WasmFunction
-  """
-  *@experimental*
-  """
-  upsertWileyFunctionMetadata(
-    _locale: LanguageTag
-    _speculative: Boolean
-    input: WileyFunctionMetadataInput
-  ): WileyFunctionMetadata
 }
 
 """
@@ -12492,10 +12442,6 @@ type Query {
   """
   _gw_viaxprocessengine_WasmFunction(_locale: LanguageTag, _transactionId: Long, uid: [UUID!]): [WasmFunction!]
   """
-  *@experimental*
-  """
-  _gw_viaxprocessengine_WileyFunctionMetadata(_locale: LanguageTag, _transactionId: Long, uid: [UUID!]): [WileyFunctionMetadata!]
-  """
   *@stable*
   """
   _sdl: String
@@ -13519,20 +13465,6 @@ type Query {
     uid: [UUID!]
   ): WasmFunctionConnection
   """
-  *@experimental*
-  """
-  filterWileyFunctionMetadata(
-    _after: String
-    _before: String
-    _filter: String
-    _first: Int
-    _last: Int
-    _orderBy: [WileyFunctionMetadataOrderByInput!]
-    id: [ID!]
-    pk: [PKRef!]
-    uid: [UUID!]
-  ): WileyFunctionMetadataConnection
-  """
   Audit log of changes of instances of `_typeName` for given `id`, `uid` or `_filter`.
     
   Searches through entire database history. Will return removed instances as well.
@@ -13892,10 +13824,6 @@ type Query {
   *@experimental*
   """
   getWasmFunction(id: ID, name: String, pk: PKRef, uid: UUID): WasmFunction
-  """
-  *@experimental*
-  """
-  getWileyFunctionMetadata(id: ID, pk: PKRef, uid: UUID): WileyFunctionMetadata
   """
   *@incubating*
   """
@@ -17311,10 +17239,6 @@ input UpdateFunctionInput {
   *@incubating*
   """
   uid: UUID
-  """
-  *@experimental*
-  """
-  wMetadata: WileyFunctionMetadataInput
 }
 
 """
@@ -17734,32 +17658,6 @@ input UpdateViewConfigActionInput {
 }
 
 """
-*@experimental*
-"""
-input UpdateWileyFunctionMetadataActionInput {
-  """
-  *@incubating*
-  """
-  addToAllowedToModifyFor: UUID
-  """
-  *@incubating*
-  """
-  removeFromAllowedToModifyFor: UUID
-  """
-  *@incubating*
-  """
-  setToAllowedToModifyFor: [UUID!]
-  """
-  *@experimental*
-  """
-  setToWMd5digest: String
-  """
-  *@experimental*
-  """
-  setToWProject: String
-}
-
-"""
 A file part in a multipart request
 """
 scalar Upload
@@ -17776,10 +17674,6 @@ input UpsertFunctionInput {
   *@incubating*
   """
   uid: UUID
-  """
-  *@experimental*
-  """
-  wMetadata: WileyFunctionMetadataInput
 }
 
 """
@@ -19178,169 +19072,5 @@ input WasmFunctionReferenceInput {
   name: String
   pk: PKRef
   uid: UUID
-}
-
-"""
-*@experimental*
-"""
-type WileyFunctionMetadata implements Auditable & Model & Node {
-  """
-  When values are present then modifying/deleting is allowed only by users mentioned in this list. When a model is mutated and empty list is added that it is treated as a setting of 'allowedToModifyFor' for the current user otherwise pass null to 'allowedToModifyFor' to turn off read only mode for all other users
-    
-  *@incubating*
-  """
-  allowedToModifyFor: [UUID!]
-  """
-  Audit log of changes.
-    
-  *@incubating*
-  """
-  auAudit: Audit
-  """
-  Timestamp indicating when the instance was created.
-    
-  *@incubating*
-  """
-  createdAt: DateTime
-  """
-  DigitalIdentity of the user who created the instance.
-    
-  *@incubating*
-  """
-  createdBy: DigitalIdentity
-  """
-  Not globally unique low-level DB identifier.
-    
-  *@stable*
-  """
-  id: ID!
-  """
-  When allowedToModifyFor has values then the value for this field is true for all users which are not mentioned within values of allowedToModifyFor
-    
-  *@incubating*
-  """
-  isReadOnly: Boolean
-  """
-  Timestamp indicating when the instance was last updated.
-    
-  *@incubating*
-  """
-  modifiedAt: DateTime
-  """
-  DigitalIdentity of the user who last updated the instance.
-    
-  *@incubating*
-  """
-  modifiedBy: DigitalIdentity
-  """
-  Primary key.
-    
-  Represents a specific *candidate key* used as a default for relationships
-  and lookups.
-    
-  *@stable*
-  """
-  pk(typeName: String): PK!
-  """
-  Primary keys for all types the instance relates to.
-    
-  *@incubating*
-  """
-  pks: [PK!]
-  """
-  The field is managed internally, links are set automatically when some other model references this model. The main goal of the field to remove automatically instances on removing target models referenced by instance of ModelsOrderingInfo
-    
-  *@incubating*
-  """
-  referencesFromModelsOrderingInfo: [ModelsOrderingInfo!]
-  """
-  GraphQL type name.
-    
-  *@incubating*
-  """
-  typeName: String!
-  """
-  Globally unique identifier.
-    
-  *@stable*
-  """
-  uid: UUID!
-  """
-  Hash of lambda deployed on Viax.
-    
-  *@experimental*
-  """
-  wMd5digest: String
-  """
-  Name of the project the lambda is related to.
-    
-  *@experimental*
-  """
-  wProject: String
-}
-
-type WileyFunctionMetadataConnection {
-  edges: [WileyFunctionMetadataConnectionWileyFunctionMetadataEdge!]
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type WileyFunctionMetadataConnectionWileyFunctionMetadataEdge {
-  cursor: String!
-  node: WileyFunctionMetadata
-}
-
-input WileyFunctionMetadataInput {
-  allowedToModifyFor: [UUID!]
-  createdAt: DateTime
-  createdBy: DigitalIdentityInput
-  modifiedAt: DateTime
-  modifiedBy: DigitalIdentityInput
-  pk: PKRef
-  uid: UUID
-  wMd5digest: String
-  wProject: String
-}
-
-enum WileyFunctionMetadataOrderByFields {
-  _score
-  createdAt
-  id
-  isReadOnly
-  modifiedAt
-  pk
-  uid
-  wMd5digest
-  wProject
-}
-
-input WileyFunctionMetadataOrderByInput {
-  direction: OrderByDirection
-  field: WileyFunctionMetadataOrderByFields!
-}
-
-input WileyFunctionMetadataReferenceInput {
-  pk: PKRef
-  uid: UUID
-}
-
-"""
-Defines possible write policies for model's fields
-
-*@incubating*
-"""
-enum WritePolicy {
-  """
-  *@incubating*
-  """
-  ALWAYS
-  """
-  *@incubating*
-  """
-  ONLY_INITIALLY
-  """
-  *@incubating*
-  """
-  PROHIBITED
 }
 

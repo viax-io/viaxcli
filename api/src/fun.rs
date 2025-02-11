@@ -1,9 +1,15 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
+use std::fs::File;
+use std::io;
 use std::{error::Error, path::PathBuf};
 
 use cynic::{MutationBuilder, QueryBuilder};
-use query::{FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, Uuid};
+use query::{
+    FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function,
+    FunctionRuntimeResponse, Uuid,
+};
+use query::{FnTemplate, FnTemplateVariables};
 use reqwest::blocking::Client;
 use viax_config::config::ConfVal;
 use viax_config::config::ViaxConfig;
@@ -145,4 +151,50 @@ fn display_fn(fun: &Function) {
         &fun.version.as_ref().unwrap(),
         &fun.ready_revision.as_ref().unwrap()
     );
+}
+
+pub fn get_fn_template(
+    req_client: &reqwest::blocking::Client,
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+) -> Result<FunctionRuntimeResponse, Box<dyn Error>> {
+    use cynic::http::ReqwestBlockingExt;
+
+    let api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
+
+    let q = FnTemplate::build(FnTemplateVariables {
+        lang: query::FunctionLanguage::Node,
+    });
+
+    let response = req_client
+        .post(env_cfg.api_url(&cfg.realm, env))
+        .bearer_auth(api_token)
+        .run_graphql(q)
+        .unwrap();
+
+    if response.errors.is_some() {
+        Err(format!(
+            "Failed to get fn template, errors: {:?}",
+            response.errors.unwrap()
+        ))?
+    } else {
+        let fntmplt = response.data.unwrap();
+        Ok(fntmplt.runtime_template.unwrap())
+    }
+}
+
+pub fn command_create_fn(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    _: &str,
+) -> Result<(), Box<dyn Error>> {
+    let req_client = reqwest::blocking::Client::new();
+
+    let fnrt = get_fn_template(&req_client, cfg, env_cfg, env)?;
+    let mut resp = req_client.get(fnrt.url.0).send().unwrap();
+    let mut out_file = File::create("tmplt.zip")?;
+    io::copy(&mut resp, &mut out_file)?;
+    Ok(())
 }
