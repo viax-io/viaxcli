@@ -58,9 +58,15 @@ Note: if you are on macos, after you download a binary run `xattr -c viax` or al
 
 Create a function:
 ```
+Usage: viax fn create <LANG> <NAME>
+
+Arguments:
+  <LANG>  [possible values: node, typescript]
+  <NAME>
+
 $ viax fn create typescript test-fun
 
-Successfully create test-fun function! Check dir 'test-fun'.
+Successfully create test-fun function! Check dir 'test-fun'. Make sure to edit viax.yaml!
 ```
 
 Get a function:
