@@ -1,3 +1,4 @@
+use strum_macros::EnumString;
 use viax_schema::viax::{self as schema};
 
 #[derive(cynic::QueryVariables, Debug)]
@@ -143,7 +144,7 @@ pub enum DeployStatus {
     Unknown,
 }
 
-#[derive(cynic::Enum, Clone, Copy, Debug)]
+#[derive(cynic::Enum, Clone, Copy, Debug, EnumString)]
 pub enum FunctionLanguage {
     #[cynic(rename = "Node")]
     Node,

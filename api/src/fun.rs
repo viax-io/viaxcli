@@ -6,7 +6,7 @@ use std::{io, str::FromStr};
 
 use cynic::{MutationBuilder, QueryBuilder};
 use query::{
-    FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function,
+    FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, FunctionLanguage,
     FunctionRuntimeResponse, Uuid,
 };
 use query::{FnTemplate, FnTemplateVariables};
@@ -158,14 +158,13 @@ pub fn get_fn_template(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
     env: &str,
+    lang: FunctionLanguage,
 ) -> Result<FunctionRuntimeResponse, Box<dyn Error>> {
     use cynic::http::ReqwestBlockingExt;
 
     let api_token = acquire_token(env_cfg, &cfg.realm, env, req_client);
 
-    let q = FnTemplate::build(FnTemplateVariables {
-        lang: query::FunctionLanguage::Node,
-    });
+    let q = FnTemplate::build(FnTemplateVariables { lang });
 
     let response = req_client
         .post(env_cfg.api_url(&cfg.realm, env))
@@ -188,16 +187,17 @@ pub fn command_create_fn(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
     env: &str,
-    _: &str,
+    lang: &str,
+    name: &str,
 ) -> Result<(), Box<dyn Error>> {
+    let fn_lang = FunctionLanguage::from_str(lang).expect("No such function lang available");
+
     let req_client = reqwest::blocking::Client::new();
 
-    let src_dir = String::from("./test_fn");
+    let src_dir = String::from(name);
     create_dir_all(&src_dir)?;
 
-    println!("requesting file...");
-    let fnrt = get_fn_template(&req_client, cfg, env_cfg, env)?;
-    println!("requesting url...");
+    let fnrt = get_fn_template(&req_client, cfg, env_cfg, env, fn_lang)?;
     let mut resp = req_client.get(fnrt.url.0).send().unwrap();
 
     let dst_zip = String::from(&src_dir) + "/tmplt.zip";
@@ -207,10 +207,8 @@ pub fn command_create_fn(
         .truncate(true)
         .open(&dst_zip)?;
 
-    println!("copying file...");
     io::copy(&mut resp, &mut out_file)?;
     out_file.sync_all()?;
-    println!("extracting file...");
 
     let zip_file = OpenOptions::new().write(true).read(true).open(&dst_zip)?;
     let mut archive = zip::ZipArchive::new(zip_file)?;
@@ -219,5 +217,6 @@ pub fn command_create_fn(
 
     remove_file(&dst_zip)?;
 
+    println!("Successfully create {name} function! Check dir '{name}'.");
     Ok(())
 }

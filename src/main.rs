@@ -39,7 +39,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             FnCommands::Deploy { path } => command_deploy_fn(&cfg, env_cfg, &env, path)?,
             FnCommands::Delete { name } => delete_fn(&cfg, env_cfg, &env, name)?,
-            FnCommands::Create { lang } => command_create_fn(&cfg, env_cfg, &env, lang)?,
+            FnCommands::Create { lang, name } => {
+                command_create_fn(&cfg, env_cfg, &env, &lang.to_string(), name)?
+            }
         },
     };
 

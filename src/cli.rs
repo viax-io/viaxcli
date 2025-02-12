@@ -1,6 +1,7 @@
+use core::fmt;
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Debug, Parser)]
 #[command(version, arg_required_else_help = true)]
@@ -52,9 +53,23 @@ pub enum FnCommands {
         name: String,
     },
     Create {
-        lang: String,
+        #[arg(value_enum)]
+        lang: Lang,
+        name: String,
     },
     Delete {
         name: String,
     },
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum Lang {
+    Node,
+    Typescript,
+}
+
+impl fmt::Display for Lang {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
