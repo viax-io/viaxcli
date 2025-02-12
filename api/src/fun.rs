@@ -1,8 +1,8 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
-use std::fs::File;
-use std::io;
+use std::fs::{create_dir_all, remove_file, OpenOptions};
 use std::{error::Error, path::PathBuf};
+use std::{io, str::FromStr};
 
 use cynic::{MutationBuilder, QueryBuilder};
 use query::{
@@ -161,7 +161,7 @@ pub fn get_fn_template(
 ) -> Result<FunctionRuntimeResponse, Box<dyn Error>> {
     use cynic::http::ReqwestBlockingExt;
 
-    let api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
+    let api_token = acquire_token(env_cfg, &cfg.realm, env, req_client);
 
     let q = FnTemplate::build(FnTemplateVariables {
         lang: query::FunctionLanguage::Node,
@@ -192,9 +192,32 @@ pub fn command_create_fn(
 ) -> Result<(), Box<dyn Error>> {
     let req_client = reqwest::blocking::Client::new();
 
+    let src_dir = String::from("./test_fn");
+    create_dir_all(&src_dir)?;
+
+    println!("requesting file...");
     let fnrt = get_fn_template(&req_client, cfg, env_cfg, env)?;
+    println!("requesting url...");
     let mut resp = req_client.get(fnrt.url.0).send().unwrap();
-    let mut out_file = File::create("tmplt.zip")?;
+
+    let dst_zip = String::from(&src_dir) + "/tmplt.zip";
+    let mut out_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&dst_zip)?;
+
+    println!("copying file...");
     io::copy(&mut resp, &mut out_file)?;
+    out_file.sync_all()?;
+    println!("extracting file...");
+
+    let zip_file = OpenOptions::new().write(true).read(true).open(&dst_zip)?;
+    let mut archive = zip::ZipArchive::new(zip_file)?;
+    let target_path = PathBuf::from_str(&src_dir)?;
+    archive.extract(&target_path)?;
+
+    remove_file(&dst_zip)?;
+
     Ok(())
 }
