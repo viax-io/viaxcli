@@ -1,4 +1,22 @@
-use viax_schema::viax as schema;
+use strum_macros::EnumString;
+use viax_schema::viax::{self as schema};
+
+#[derive(cynic::QueryVariables, Debug)]
+pub struct FnTemplateVariables {
+    pub lang: FunctionLanguage,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Query", variables = "FnTemplateVariables")]
+pub struct FnTemplate {
+    #[arguments(input: { language: $lang })]
+    pub runtime_template: Option<FunctionRuntimeResponse>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+pub struct FunctionRuntimeResponse {
+    pub url: Url,
+}
 
 #[derive(cynic::QueryVariables, Debug)]
 pub struct FnMgmntVariables<'a> {
@@ -11,6 +29,7 @@ pub struct FnMgmnt {
     #[arguments(name: $name)]
     pub get_function: Option<Function>,
 }
+
 #[derive(cynic::QueryVariables, Debug)]
 pub struct FnDeployVariables {
     pub file: Upload,
@@ -36,6 +55,7 @@ pub struct FnDelete {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
+#[cynic(schema = "viax")]
 pub struct Function {
     pub uid: Uuid,
     pub name: String,
@@ -124,6 +144,14 @@ pub enum DeployStatus {
     Unknown,
 }
 
+#[derive(cynic::Enum, Clone, Copy, Debug, EnumString)]
+pub enum FunctionLanguage {
+    #[cynic(rename = "Node")]
+    Node,
+    #[cynic(rename = "Typescript")]
+    Typescript,
+}
+
 #[derive(cynic::Scalar, Debug, Clone)]
 pub struct DateTime(pub String);
 
@@ -133,3 +161,6 @@ pub struct Uuid(pub String);
 
 #[derive(cynic::Scalar, Debug, Clone)]
 pub struct Upload(pub String);
+
+#[derive(cynic::Scalar, Debug, Clone)]
+pub struct Url(pub String);

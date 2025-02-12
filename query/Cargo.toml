@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 cynic = { version = "3" }
+strum = "0.27.0"
+strum_macros = "0.27.0"
 viax-schema = { path = "../schema" }
 
 [build-dependencies]

@@ -1,7 +1,7 @@
 pub mod cli;
 
 use crate::cli::Cli;
-use api::fun::{command_deploy_fn, delete_fn, get_fn};
+use api::fun::{command_create_fn, command_deploy_fn, delete_fn, get_fn};
 use api::int::{command_deploy_int, delete_int, get_int};
 use cli::{Commands, FnCommands, IntCommands};
 use std::{error::Error, path::PathBuf};
@@ -39,6 +39,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             FnCommands::Deploy { path } => command_deploy_fn(&cfg, env_cfg, &env, path)?,
             FnCommands::Delete { name } => delete_fn(&cfg, env_cfg, &env, name)?,
+            FnCommands::Create { lang, name } => {
+                command_create_fn(&cfg, env_cfg, &env, &lang.to_string(), name)?
+            }
         },
     };
 

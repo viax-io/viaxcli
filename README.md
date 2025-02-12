@@ -2,7 +2,7 @@ viax cli
 ------------
 
 A CLI tool to manage state of viax cloud. It includes:
-* get/deploy/delete functions
+* create/get/deploy/delete functions
 * get/deploy/delete integrations
 
 To see what is available at the moment run:
@@ -55,6 +55,19 @@ Optional, if not specified it is built from a pattern:
 Note: if you are on macos, after you download a binary run `xattr -c viax` or allow execution through "Settings -> Privacy & Security".
 
 # Examples
+
+Create a function:
+```
+Usage: viax fn create <LANG> <NAME>
+
+Arguments:
+  <LANG>  [possible values: node, typescript]
+  <NAME>
+
+$ viax fn create typescript test-fun
+
+Successfully create test-fun function! Check dir 'test-fun'. Make sure to edit viax.yaml!
+```
 
 Get a function:
 ```

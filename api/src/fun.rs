@@ -1,9 +1,15 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
+use std::fs::{create_dir_all, remove_file, OpenOptions};
 use std::{error::Error, path::PathBuf};
+use std::{io, str::FromStr};
 
 use cynic::{MutationBuilder, QueryBuilder};
-use query::{FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, Uuid};
+use query::{
+    FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, FunctionLanguage,
+    FunctionRuntimeResponse, Uuid,
+};
+use query::{FnTemplate, FnTemplateVariables};
 use reqwest::blocking::Client;
 use viax_config::config::ConfVal;
 use viax_config::config::ViaxConfig;
@@ -145,4 +151,72 @@ fn display_fn(fun: &Function) {
         &fun.version.as_ref().unwrap(),
         &fun.ready_revision.as_ref().unwrap()
     );
+}
+
+pub fn get_fn_template(
+    req_client: &reqwest::blocking::Client,
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    lang: FunctionLanguage,
+) -> Result<FunctionRuntimeResponse, Box<dyn Error>> {
+    use cynic::http::ReqwestBlockingExt;
+
+    let api_token = acquire_token(env_cfg, &cfg.realm, env, req_client);
+
+    let q = FnTemplate::build(FnTemplateVariables { lang });
+
+    let response = req_client
+        .post(env_cfg.api_url(&cfg.realm, env))
+        .bearer_auth(api_token)
+        .run_graphql(q)
+        .unwrap();
+
+    if response.errors.is_some() {
+        Err(format!(
+            "Failed to get fn template, errors: {:?}",
+            response.errors.unwrap()
+        ))?
+    } else {
+        let fntmplt = response.data.unwrap();
+        Ok(fntmplt.runtime_template.unwrap())
+    }
+}
+
+pub fn command_create_fn(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    lang: &str,
+    name: &str,
+) -> Result<(), Box<dyn Error>> {
+    let fn_lang = FunctionLanguage::from_str(lang).expect("No such function lang available");
+
+    let req_client = reqwest::blocking::Client::new();
+
+    let src_dir = String::from(name);
+    create_dir_all(&src_dir)?;
+
+    let fnrt = get_fn_template(&req_client, cfg, env_cfg, env, fn_lang)?;
+    let mut resp = req_client.get(fnrt.url.0).send().unwrap();
+
+    let dst_zip = String::from(&src_dir) + "/tmplt.zip";
+    let mut out_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&dst_zip)?;
+
+    io::copy(&mut resp, &mut out_file)?;
+    out_file.sync_all()?;
+
+    let zip_file = OpenOptions::new().write(true).read(true).open(&dst_zip)?;
+    let mut archive = zip::ZipArchive::new(zip_file)?;
+    let target_path = PathBuf::from_str(&src_dir)?;
+    archive.extract(&target_path)?;
+
+    remove_file(&dst_zip)?;
+
+    println!("Successfully create {name} function! Check dir '{name}'.");
+    Ok(())
 }
