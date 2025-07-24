@@ -42,12 +42,13 @@ auth_url = "https://auth.viax.demo.viax.io"
 api_url = "https://api.viax.demo.viax.io/graphql"
 [dev]
 client_id = "demo-client"
-client_secret = "a81c3b72-0c8f-4885-b888-9999fa123455"
+user = "viax-user"
 ```
 
 Specify your realm at the top of file, e.g. `realm = "viax"`. Then in square brackats it is env specific configuration, required:
 * client_id
-* client_secret  
+* client_secret 
+* user - in case of authentication via username/password, password will be asked on each command execution
 Optional, if not specified it is built from a pattern:
 * auth_url - pattern for a default one `https://auth.{realm}.{env}.viax.io`
 * api_url patter for a default url `https://api.{realm}.{env}.viax.io/graphql`

@@ -10,25 +10,40 @@ pub fn acquire_token(
     env_cfg: &ConfVal,
     realm: &str,
     env: &str,
+    password: &String,
     client: &reqwest::blocking::Client,
 ) -> String {
     let url = env_cfg.auth_url(realm, env);
     let client_id = &env_cfg.client_id;
     let client_secret = &env_cfg.client_secret;
-    let grant_type = "client_credentials".to_string();
+    let user = &env_cfg.user;
+    let grant_type_client_creds = "client_credentials".to_string();
+    let grant_type_password = "password".to_string();
+    let form_params = if client_secret.is_none() {
+        println!(">>> password");
+        vec![
+            ("client_id", client_id),
+            ("username", user.as_ref().unwrap()),
+            ("password", password),
+            ("grant_type", &grant_type_password),
+        ]
+    } else {
+        println!(">>> creds");
+        vec![
+            ("client_id", client_id),
+            ("client_secret", client_secret.as_ref().unwrap()),
+            ("grant_type", &grant_type_client_creds),
+        ]
+    };
 
     let response = client
         .post(format!(
             "{url}/realms/{realm}/protocol/openid-connect/token",
         ))
-        .form(&[
-            ("client_id", client_id),
-            ("client_secret", client_secret),
-            ("grant_type", &grant_type),
-        ])
+        .form(&form_params)
         .send();
 
-    if response.is_err() {
+    if response.is_err() || !response.as_ref().unwrap().status().is_success() {
         println!("Failed to get access_token, {:#?}", response);
         panic!()
     }

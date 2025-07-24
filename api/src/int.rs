@@ -20,11 +20,12 @@ pub fn delete_int(
     env_cfg: &ConfVal,
     env: &str,
     name: &str,
+    password: &String,
 ) -> Result<(), Box<dyn Error>> {
     use cynic::http::ReqwestBlockingExt;
 
     let req_client = reqwest::blocking::Client::new();
-    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
+    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
 
     let int = get_int_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token).unwrap();
 
@@ -91,9 +92,10 @@ pub fn get_int(
     env_cfg: &ConfVal,
     env: &str,
     name: &str,
+    password: &String,
 ) -> Result<IntegrationDeployment, Box<dyn Error>> {
     let req_client = reqwest::blocking::Client::new();
-    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
+    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
 
     let int_result = get_int_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token);
     if let Ok(ref int) = int_result {
@@ -106,12 +108,14 @@ pub fn command_deploy_int(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
     env: &str,
+    password: &String,
     path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
     let response = deploy(
         cfg,
         env_cfg,
         env,
+        password,
         path,
         String::from(
             r#"{ "operationName": "upsertIntegrationDeployment", "query": "mutation upsertIntegrationDeployment($file: Upload!) { upsertIntegrationDeployment(input: { package: $file }) { uid name deployStatus latestDeploymentStartedAt enqueuedAt } }", "variables": { "file": null } }"#,

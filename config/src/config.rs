@@ -5,7 +5,9 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfVal {
     pub client_id: String,
-    pub client_secret: String,
+    pub client_secret: Option<String>,
+    pub user: Option<String>,
+    pub password: Option<String>,
     auth_url: Option<String>,
     api_url: Option<String>,
 }
@@ -53,7 +55,9 @@ impl ::std::default::Default for ViaxConfig {
     fn default() -> Self {
         let conf_val = ConfVal {
             client_id: "".into(),
-            client_secret: "".into(),
+            client_secret: Some("".to_string()),
+            user: Some("".to_string()),
+            password: Some("".to_string()),
             auth_url: Some("".to_string()),
             api_url: Some("".to_string()),
         };
