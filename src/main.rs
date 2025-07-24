@@ -4,6 +4,8 @@ use crate::cli::Cli;
 use api::fun::{command_create_fn, command_deploy_fn, delete_fn, get_fn};
 use api::int::{command_deploy_int, delete_int, get_int};
 use cli::{Commands, FnCommands, IntCommands};
+use rpassword::read_password;
+use std::io::{self, Write};
 use std::{error::Error, path::PathBuf};
 use viax_config::config::ViaxConfig;
 
@@ -24,23 +26,33 @@ fn main() -> Result<(), Box<dyn Error>> {
         .unwrap();
     let env_cfg = cfg.config(&env);
 
+    let mut password = "".to_string();
+    if env_cfg.client_secret.is_none() {
+        print!("Enter password: ");
+        io::stdout().flush().unwrap();
+        password = read_password().expect("Password must be entered!");
+        // password = password.expect("Password must be entered!");
+    }
+
     match &args.command {
         Commands::Int { command } => match command {
             IntCommands::Get { name } => {
-                get_int(&cfg, env_cfg, &env, name)?;
+                get_int(&cfg, env_cfg, &env, name, &password)?;
             }
-            IntCommands::Deploy { path } => command_deploy_int(&cfg, env_cfg, &env, path)?,
-            IntCommands::Delete { name } => delete_int(&cfg, env_cfg, &env, name)?,
+            IntCommands::Deploy { path } => {
+                command_deploy_int(&cfg, env_cfg, &env, &password, path)?
+            }
+            IntCommands::Delete { name } => delete_int(&cfg, env_cfg, &env, name, &password)?,
         },
 
         Commands::Fn { command } => match command {
             FnCommands::Get { name } => {
-                get_fn(&cfg, env_cfg, &env, name)?;
+                get_fn(&cfg, env_cfg, &env, name, &password)?;
             }
-            FnCommands::Deploy { path } => command_deploy_fn(&cfg, env_cfg, &env, path)?,
-            FnCommands::Delete { name } => delete_fn(&cfg, env_cfg, &env, name)?,
+            FnCommands::Deploy { path } => command_deploy_fn(&cfg, env_cfg, &env, &password, path)?,
+            FnCommands::Delete { name } => delete_fn(&cfg, env_cfg, &env, name, &password)?,
             FnCommands::Create { lang, name } => {
-                command_create_fn(&cfg, env_cfg, &env, &lang.to_string(), name)?
+                command_create_fn(&cfg, env_cfg, &env, &password, &lang.to_string(), name)?
             }
         },
     };

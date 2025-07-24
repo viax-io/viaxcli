@@ -1,6 +1,6 @@
 [package]
 name = "viax"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 
 [dependencies]
@@ -11,6 +11,7 @@ viax-schema = { path = "schema" }
 query = { path = "query" }
 api = { path = "api" }
 viax-config = { path = "config" }
+rpassword = "7.4.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 openssl = { version = "0.10.68", features = ["vendored"] }

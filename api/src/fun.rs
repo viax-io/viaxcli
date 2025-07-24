@@ -19,11 +19,12 @@ pub fn delete_fn(
     env_cfg: &ConfVal,
     env: &str,
     name: &str,
+    password: &String,
 ) -> Result<(), Box<dyn Error>> {
     use cynic::http::ReqwestBlockingExt;
 
     let req_client = reqwest::blocking::Client::new();
-    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
+    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
 
     let fun = get_fn_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token).unwrap();
 
@@ -90,9 +91,10 @@ pub fn get_fn(
     env_cfg: &ConfVal,
     env: &str,
     name: &str,
+    password: &String,
 ) -> Result<Function, Box<dyn Error>> {
     let req_client = reqwest::blocking::Client::new();
-    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, &req_client);
+    let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
 
     let fun_result = get_fn_with_token(cfg, env_cfg, env, &req_client, name, &viax_api_token);
     if let Ok(ref fun) = fun_result {
@@ -105,12 +107,14 @@ pub fn command_deploy_fn(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
     env: &str,
+    password: &String,
     path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
     let response = deploy(
         cfg,
         env_cfg,
         env,
+        password,
         path,
         String::from(
             r#"{ "operationName": "upsertFunction", "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid name deployStatus version readyRevision ready latestDeploymentStartedAt latestCreatedRevision enqueuedAt } }", "variables": { "file": null } }"#,
@@ -158,11 +162,12 @@ pub fn get_fn_template(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
     env: &str,
+    password: &String,
     lang: FunctionLanguage,
 ) -> Result<FunctionRuntimeResponse, Box<dyn Error>> {
     use cynic::http::ReqwestBlockingExt;
 
-    let api_token = acquire_token(env_cfg, &cfg.realm, env, req_client);
+    let api_token = acquire_token(env_cfg, &cfg.realm, env, password, req_client);
 
     let q = FnTemplate::build(FnTemplateVariables { lang });
 
@@ -187,6 +192,7 @@ pub fn command_create_fn(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
     env: &str,
+    password: &String,
     lang: &str,
     name: &str,
 ) -> Result<(), Box<dyn Error>> {
@@ -197,7 +203,7 @@ pub fn command_create_fn(
     let src_dir = String::from(name);
     create_dir_all(&src_dir)?;
 
-    let fnrt = get_fn_template(&req_client, cfg, env_cfg, env, fn_lang)?;
+    let fnrt = get_fn_template(&req_client, cfg, env_cfg, env, password, fn_lang)?;
     let mut resp = req_client.get(fnrt.url.0).send().unwrap();
 
     let dst_zip = String::from(&src_dir) + "/tmplt.zip";
