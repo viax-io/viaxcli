@@ -37,7 +37,7 @@ pub fn delete_fn(
         .post(env_cfg.api_url(&cfg.realm, env))
         .bearer_auth(viax_api_token)
         .run_graphql(q)
-        .unwrap();
+        .expect("Failed to retrive auth token");
 
     if response.errors.is_some() {
         Err(format!(

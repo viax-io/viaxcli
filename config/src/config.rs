@@ -16,17 +16,13 @@ impl ConfVal {
     pub fn auth_url(&self, realm: &str, env: &str) -> String {
         self.auth_url
             .clone()
-            .or_else(|| -> Option<String> { Some(format!("https://auth.{realm}.{env}.viax.io")) })
-            .unwrap()
+            .unwrap_or(format!("https://auth.{realm}.{env}.viax.io"))
     }
 
     pub fn api_url(&self, realm: &str, env: &str) -> String {
         self.api_url
             .clone()
-            .or_else(|| -> Option<String> {
-                Some(format!("https://api.{realm}.{env}.viax.io/graphql"))
-            })
-            .unwrap()
+            .unwrap_or(format!("https://api.{realm}.{env}.viax.io/graphql"))
     }
 }
 
