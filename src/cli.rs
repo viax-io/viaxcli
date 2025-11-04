@@ -52,6 +52,7 @@ pub enum FnCommands {
     Get {
         name: String,
     },
+    List,
     Create {
         #[arg(value_enum)]
         lang: Lang,

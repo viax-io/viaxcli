@@ -6,8 +6,8 @@ use std::{io, str::FromStr};
 
 use cynic::{MutationBuilder, QueryBuilder};
 use query::{
-    FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, FunctionLanguage,
-    FunctionRuntimeResponse, Uuid,
+    FnDelete, FnDeleteVariables, FnDeploy, FnList, FnMgmnt, FnMgmntVariables, Function,
+    FunctionLanguage, FunctionRuntimeResponse, Uuid,
 };
 use query::{FnTemplate, FnTemplateVariables};
 use reqwest::blocking::Client;
@@ -101,6 +101,50 @@ pub fn get_fn(
         display_fn(fun);
     }
     fun_result
+}
+
+pub fn list_fns(
+    cfg: &ViaxConfig,
+    env_cfg: &viax_config::config::ConfVal,
+    env: &str,
+    password: &String,
+) -> Result<(), Box<dyn Error>> {
+    use cynic::http::ReqwestBlockingExt;
+
+    let req_client = reqwest::blocking::Client::new();
+    let api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
+
+    let q = FnList::build(());
+
+    let response = req_client
+        .post(env_cfg.api_url(&cfg.realm, env))
+        .bearer_auth(api_token)
+        .run_graphql(q)
+        .unwrap();
+
+    if response.errors.is_some() {
+        Err(format!(
+            "Failed to get list of funs, errors: {:?}",
+            response.errors.unwrap()
+        ))?
+    } else {
+        let fnlist = response.data.unwrap();
+        if fnlist.filter_function.is_none() {
+            println!("Functions not found");
+        } else {
+            fnlist
+                .filter_function
+                .expect("Failed to deserealize functions")
+                .edges
+                .expect("Failed to deserealize edges")
+                .iter()
+                .for_each(|edge| {
+                    let fun = edge.node.as_ref().unwrap();
+                    display_fn(fun);
+                });
+        }
+        Ok(())
+    }
 }
 
 pub fn command_deploy_fn(
