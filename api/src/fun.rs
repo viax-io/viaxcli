@@ -1,6 +1,7 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
 use std::fs::{create_dir_all, remove_file, OpenOptions};
+use std::time::SystemTime;
 use std::{error::Error, path::PathBuf};
 use std::{io, str::FromStr};
 
@@ -13,6 +14,9 @@ use query::{FnTemplate, FnTemplateVariables};
 use reqwest::blocking::Client;
 use viax_config::config::ConfVal;
 use viax_config::config::ViaxConfig;
+use zip::write::SimpleFileOptions;
+use zip::CompressionMethod;
+use zip_extensions::zip_create_from_directory_with_options;
 
 pub fn delete_fn(
     cfg: &ViaxConfig,
@@ -132,6 +136,7 @@ pub fn list_fns(
         if fnlist.filter_function.is_none() {
             println!("Functions not found");
         } else {
+            display_header();
             fnlist
                 .filter_function
                 .expect("Failed to deserealize functions")
@@ -140,7 +145,7 @@ pub fn list_fns(
                 .iter()
                 .for_each(|edge| {
                     let fun = edge.node.as_ref().unwrap();
-                    display_fn(fun);
+                    display_fn_data(fun);
                 });
         }
         Ok(())
@@ -154,18 +159,39 @@ pub fn command_deploy_fn(
     password: &String,
     path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
+    let tmp_dir = std::env::temp_dir();
+
+    let now = SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+
+    let fun_bundle = tmp_dir.join(format!("f_{}.zip", now));
+
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+    zip_create_from_directory_with_options(&fun_bundle, path, |_| options)?;
+    println!("zip created {:?}", &fun_bundle);
+
     let response = deploy(
         cfg,
         env_cfg,
         env,
         password,
-        path,
+        &fun_bundle,
         String::from(
             r#"{ "operationName": "upsertFunction", "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid name deployStatus version readyRevision ready latestDeploymentStartedAt latestCreatedRevision enqueuedAt } }", "variables": { "file": null } }"#,
         ),
     );
 
-    let data: cynic::GraphQlResponse<FnDeploy> = response.json()?;
+    println!("Cleaning up...");
+    remove_file(&fun_bundle)?;
+
+    println!("Processing response");
+    if response.is_err() {
+        println!("Failed to deploy function. {:?}", response);
+        return Ok(());
+    }
+    let data: cynic::GraphQlResponse<FnDeploy> = response?.json()?;
     let fun = data.data.unwrap().upsert_function.unwrap();
 
     println!("Enqueued deployment:");
@@ -185,11 +211,14 @@ pub fn command_deploy_fn(
     Ok(())
 }
 
-fn display_fn(fun: &Function) {
+fn display_header() {
     println!(
         "{:<30} {:<5} {:<20} {:<8} {:<10}",
         "NAME", "READY", "DEPLOY_STATUS", "VERSION", "REVISION"
     );
+}
+
+fn display_fn_data(fun: &Function) {
     let ready = &fun.ready;
     println!(
         "{:<30} {:<5} {:<20} {:<8} {:<10}",
@@ -199,6 +228,11 @@ fn display_fn(fun: &Function) {
         &fun.version.as_ref().unwrap(),
         &fun.ready_revision.as_ref().unwrap()
     );
+}
+
+fn display_fn(fun: &Function) {
+    display_header();
+    display_fn_data(fun);
 }
 
 pub fn get_fn_template(

@@ -124,7 +124,7 @@ pub fn command_deploy_int(
         ),
     );
 
-    let data: cynic::GraphQlResponse<IntDeploy> = response.json()?;
+    let data: cynic::GraphQlResponse<IntDeploy> = response?.json()?;
     let intgr = data.data.unwrap().upsert_integration_deployment.unwrap();
 
     println!("Enqueued deployment:");
@@ -165,6 +165,7 @@ pub fn list_ints(
         if int_list.get_integrations.is_none() {
             println!("Integrations not found");
         } else {
+            display_int_header();
             int_list
                 .get_integrations
                 .expect("Failed to deserealize integrations")
@@ -194,8 +195,11 @@ fn display_int(int: &IntegrationDeployment) {
     );
 }
 
-fn display_int_crd(int: &Integration) {
+fn display_int_header() {
     println!("{:<30} {:<20}", "NAME", "PHASE");
+}
+
+fn display_int_crd(int: &Integration) {
     println!(
         "{:<30} {:<20}",
         int.name.as_ref().unwrap(),
