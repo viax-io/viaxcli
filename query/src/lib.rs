@@ -101,7 +101,7 @@ pub struct IntDeployGet {
 
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(graphql_type = "Query")]
-pub struct IntGet {
+pub struct IntList {
     pub get_integrations: Option<Vec<Option<Integration>>>,
 }
 

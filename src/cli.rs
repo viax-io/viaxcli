@@ -36,6 +36,7 @@ pub enum IntCommands {
     Get {
         name: String,
     },
+    List,
     Delete {
         name: String,
     },

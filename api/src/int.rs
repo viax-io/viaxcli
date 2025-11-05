@@ -9,6 +9,8 @@ use query::IntDeleteVariables;
 use query::IntDeploy;
 use query::IntDeployGet;
 use query::IntGetVariables;
+use query::IntList;
+use query::Integration;
 use query::IntegrationDeployment;
 use query::Uuid;
 use reqwest::blocking::Client;
@@ -135,6 +137,46 @@ pub fn command_deploy_int(
     Ok(())
 }
 
+pub fn list_ints(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    password: &String,
+) -> Result<(), Box<dyn Error>> {
+    use cynic::http::ReqwestBlockingExt;
+    let req_client = reqwest::blocking::Client::new();
+    let api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
+
+    let q = IntList::build(());
+
+    let response = req_client
+        .post(env_cfg.api_url(&cfg.realm, env))
+        .bearer_auth(api_token)
+        .run_graphql(q)
+        .unwrap();
+
+    if response.errors.is_some() {
+        Err(format!(
+            "Failed to get integrations list, errors: {:?}",
+            response.errors.unwrap()
+        ))?
+    } else {
+        let int_list = response.data.unwrap();
+        if int_list.get_integrations.is_none() {
+            println!("Integrations not found");
+        } else {
+            int_list
+                .get_integrations
+                .expect("Failed to deserealize integrations")
+                .iter()
+                .for_each(|integration| {
+                    display_int_crd(integration.as_ref().unwrap());
+                });
+        }
+        Ok(())
+    }
+}
+
 fn display_int(int: &IntegrationDeployment) {
     println!(
         "{:<30} {:<20} {:<26} {:<26}",
@@ -149,5 +191,14 @@ fn display_int(int: &IntegrationDeployment) {
             Some(ref latest_deployment_started_at) => &latest_deployment_started_at.0,
             None => "",
         }
+    );
+}
+
+fn display_int_crd(int: &Integration) {
+    println!("{:<30} {:<20}", "NAME", "PHASE");
+    println!(
+        "{:<30} {:<20}",
+        int.name.as_ref().unwrap(),
+        int.phase.as_ref().unwrap(),
     );
 }
