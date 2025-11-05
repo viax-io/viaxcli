@@ -82,15 +82,15 @@ jobs:
         #   strip: arm-linux-musleabi-strip
         - build: macos
           os: macos-latest
-          rust: 1.84.0
+          rust: 1.90.0
           target: x86_64-apple-darwin
         - build: macos
           os: macos-latest
-          rust: 1.84.0
+          rust: 1.90.0
           target: aarch64-apple-darwin
         - build: win-msvc
           os: windows-latest
-          rust: 1.84.0
+          rust: 1.90.0
           target: x86_64-pc-windows-msvc
         - build: win-gnu
           os: windows-latest
