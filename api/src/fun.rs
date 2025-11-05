@@ -186,7 +186,6 @@ pub fn command_deploy_fn(
     println!("Cleaning up...");
     remove_file(&fun_bundle)?;
 
-    println!("Processing response");
     if response.is_err() {
         println!("Failed to deploy function. {:?}", response);
         return Ok(());

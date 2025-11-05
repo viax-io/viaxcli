@@ -29,7 +29,7 @@ pub enum Commands {
 pub enum IntCommands {
     /// Deploy a integration
     Deploy {
-        /// path to a zipped integration
+        /// path to a integration directory
         path: PathBuf,
     },
     /// Get a integration
@@ -46,7 +46,7 @@ pub enum IntCommands {
 pub enum FnCommands {
     /// Deploy a function
     Deploy {
-        /// path to a zipped function
+        /// path to a function directory
         path: PathBuf,
     },
     /// Get a function
