@@ -1,5 +1,7 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
+use std::fs::remove_file;
+use std::time::SystemTime;
 use std::{error::Error, path::PathBuf};
 
 use cynic::MutationBuilder;
@@ -16,6 +18,9 @@ use query::Uuid;
 use reqwest::blocking::Client;
 use viax_config::config::ConfVal;
 use viax_config::config::ViaxConfig;
+use zip::write::SimpleFileOptions;
+use zip::CompressionMethod;
+use zip_extensions::zip_create_from_directory_with_options;
 
 pub fn delete_int(
     cfg: &ViaxConfig,
@@ -113,16 +118,32 @@ pub fn command_deploy_int(
     password: &String,
     path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
+    let tmp_dir = std::env::temp_dir();
+
+    let now = SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+
+    let int_bundle = tmp_dir.join(format!("i_{}.zip", now));
+
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+    zip_create_from_directory_with_options(&int_bundle, path, |_| options)?;
+    println!("zip created {:?}", &int_bundle);
+
     let response = deploy(
         cfg,
         env_cfg,
         env,
         password,
-        path,
+        &int_bundle,
         String::from(
             r#"{ "operationName": "upsertIntegrationDeployment", "query": "mutation upsertIntegrationDeployment($file: Upload!) { upsertIntegrationDeployment(input: { package: $file }) { uid name deployStatus latestDeploymentStartedAt enqueuedAt } }", "variables": { "file": null } }"#,
         ),
     );
+
+    println!("Cleaning up...");
+    remove_file(&int_bundle)?;
 
     let data: cynic::GraphQlResponse<IntDeploy> = response?.json()?;
     let intgr = data.data.unwrap().upsert_integration_deployment.unwrap();
