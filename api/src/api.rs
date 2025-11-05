@@ -12,7 +12,7 @@ pub fn deploy(
     password: &String,
     path: &PathBuf,
     operation: String,
-) -> Response {
+) -> Result<Response, reqwest::Error> {
     let req_client = reqwest::blocking::Client::new();
     let viax_api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
     // let viax_api_token = std::env::var("VIAX_API_TOKEN").expect("Missing VIAX_API_TOKEN env var");
@@ -28,5 +28,4 @@ pub fn deploy(
         .bearer_auth(viax_api_token)
         .multipart(form)
         .send()
-        .unwrap()
 }

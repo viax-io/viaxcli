@@ -1,11 +1,11 @@
 [package]
 name = "viax"
-version = "0.0.2"
+version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.23", features = ["derive"] }
-confy = "^0.6"
+confy = "^2.0"
 directories = "6.0.0"
 viax-schema = { path = "schema" }
 query = { path = "query" }

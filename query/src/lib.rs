@@ -55,6 +55,24 @@ pub struct FnDelete {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
+#[cynic(graphql_type = "Query")]
+pub struct FnList {
+    pub filter_function: Option<FunctionConnection>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(schema = "viax")]
+pub struct FunctionConnection {
+    pub edges: Option<Vec<FunctionConnectionFunctionEdge>>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
+#[cynic(schema = "viax")]
+pub struct FunctionConnectionFunctionEdge {
+    pub node: Option<Function>,
+}
+
+#[derive(cynic::QueryFragment, Debug)]
 #[cynic(schema = "viax")]
 pub struct Function {
     pub uid: Uuid,
@@ -83,7 +101,7 @@ pub struct IntDeployGet {
 
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(graphql_type = "Query")]
-pub struct IntGet {
+pub struct IntList {
     pub get_integrations: Option<Vec<Option<Integration>>>,
 }
 

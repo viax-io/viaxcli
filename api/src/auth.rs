@@ -20,7 +20,6 @@ pub fn acquire_token(
     let grant_type_client_creds = "client_credentials".to_string();
     let grant_type_password = "password".to_string();
     let form_params = if client_secret.is_none() {
-        println!(">>> password");
         vec![
             ("client_id", client_id),
             ("username", user.as_ref().unwrap()),
@@ -28,7 +27,6 @@ pub fn acquire_token(
             ("grant_type", &grant_type_password),
         ]
     } else {
-        println!(">>> creds");
         vec![
             ("client_id", client_id),
             ("client_secret", client_secret.as_ref().unwrap()),

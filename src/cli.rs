@@ -29,13 +29,14 @@ pub enum Commands {
 pub enum IntCommands {
     /// Deploy a integration
     Deploy {
-        /// path to a zipped integration
+        /// path to a integration directory
         path: PathBuf,
     },
     /// Get a integration
     Get {
         name: String,
     },
+    List,
     Delete {
         name: String,
     },
@@ -45,13 +46,14 @@ pub enum IntCommands {
 pub enum FnCommands {
     /// Deploy a function
     Deploy {
-        /// path to a zipped function
+        /// path to a function directory
         path: PathBuf,
     },
     /// Get a function
     Get {
         name: String,
     },
+    List,
     Create {
         #[arg(value_enum)]
         lang: Lang,

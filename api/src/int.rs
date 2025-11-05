@@ -1,5 +1,7 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
+use std::fs::remove_file;
+use std::time::SystemTime;
 use std::{error::Error, path::PathBuf};
 
 use cynic::MutationBuilder;
@@ -9,11 +11,16 @@ use query::IntDeleteVariables;
 use query::IntDeploy;
 use query::IntDeployGet;
 use query::IntGetVariables;
+use query::IntList;
+use query::Integration;
 use query::IntegrationDeployment;
 use query::Uuid;
 use reqwest::blocking::Client;
 use viax_config::config::ConfVal;
 use viax_config::config::ViaxConfig;
+use zip::write::SimpleFileOptions;
+use zip::CompressionMethod;
+use zip_extensions::zip_create_from_directory_with_options;
 
 pub fn delete_int(
     cfg: &ViaxConfig,
@@ -111,18 +118,34 @@ pub fn command_deploy_int(
     password: &String,
     path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
+    let tmp_dir = std::env::temp_dir();
+
+    let now = SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+
+    let int_bundle = tmp_dir.join(format!("i_{}.zip", now));
+
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+    zip_create_from_directory_with_options(&int_bundle, path, |_| options)?;
+    println!("zip created {:?}", &int_bundle);
+
     let response = deploy(
         cfg,
         env_cfg,
         env,
         password,
-        path,
+        &int_bundle,
         String::from(
             r#"{ "operationName": "upsertIntegrationDeployment", "query": "mutation upsertIntegrationDeployment($file: Upload!) { upsertIntegrationDeployment(input: { package: $file }) { uid name deployStatus latestDeploymentStartedAt enqueuedAt } }", "variables": { "file": null } }"#,
         ),
     );
 
-    let data: cynic::GraphQlResponse<IntDeploy> = response.json()?;
+    println!("Cleaning up...");
+    remove_file(&int_bundle)?;
+
+    let data: cynic::GraphQlResponse<IntDeploy> = response?.json()?;
     let intgr = data.data.unwrap().upsert_integration_deployment.unwrap();
 
     println!("Enqueued deployment:");
@@ -133,6 +156,47 @@ pub fn command_deploy_int(
     );
 
     Ok(())
+}
+
+pub fn list_ints(
+    cfg: &ViaxConfig,
+    env_cfg: &ConfVal,
+    env: &str,
+    password: &String,
+) -> Result<(), Box<dyn Error>> {
+    use cynic::http::ReqwestBlockingExt;
+    let req_client = reqwest::blocking::Client::new();
+    let api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
+
+    let q = IntList::build(());
+
+    let response = req_client
+        .post(env_cfg.api_url(&cfg.realm, env))
+        .bearer_auth(api_token)
+        .run_graphql(q)
+        .unwrap();
+
+    if response.errors.is_some() {
+        Err(format!(
+            "Failed to get integrations list, errors: {:?}",
+            response.errors.unwrap()
+        ))?
+    } else {
+        let int_list = response.data.unwrap();
+        if int_list.get_integrations.is_none() {
+            println!("Integrations not found");
+        } else {
+            display_int_header();
+            int_list
+                .get_integrations
+                .expect("Failed to deserealize integrations")
+                .iter()
+                .for_each(|integration| {
+                    display_int_crd(integration.as_ref().unwrap());
+                });
+        }
+        Ok(())
+    }
 }
 
 fn display_int(int: &IntegrationDeployment) {
@@ -149,5 +213,17 @@ fn display_int(int: &IntegrationDeployment) {
             Some(ref latest_deployment_started_at) => &latest_deployment_started_at.0,
             None => "",
         }
+    );
+}
+
+fn display_int_header() {
+    println!("{:<30} {:<20}", "NAME", "PHASE");
+}
+
+fn display_int_crd(int: &Integration) {
+    println!(
+        "{:<30} {:<20}",
+        int.name.as_ref().unwrap(),
+        int.phase.as_ref().unwrap(),
     );
 }

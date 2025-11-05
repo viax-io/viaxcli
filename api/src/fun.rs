@@ -1,18 +1,22 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
 use std::fs::{create_dir_all, remove_file, OpenOptions};
+use std::time::SystemTime;
 use std::{error::Error, path::PathBuf};
 use std::{io, str::FromStr};
 
 use cynic::{MutationBuilder, QueryBuilder};
 use query::{
-    FnDelete, FnDeleteVariables, FnDeploy, FnMgmnt, FnMgmntVariables, Function, FunctionLanguage,
-    FunctionRuntimeResponse, Uuid,
+    FnDelete, FnDeleteVariables, FnDeploy, FnList, FnMgmnt, FnMgmntVariables, Function,
+    FunctionLanguage, FunctionRuntimeResponse, Uuid,
 };
 use query::{FnTemplate, FnTemplateVariables};
 use reqwest::blocking::Client;
 use viax_config::config::ConfVal;
 use viax_config::config::ViaxConfig;
+use zip::write::SimpleFileOptions;
+use zip::CompressionMethod;
+use zip_extensions::zip_create_from_directory_with_options;
 
 pub fn delete_fn(
     cfg: &ViaxConfig,
@@ -37,7 +41,7 @@ pub fn delete_fn(
         .post(env_cfg.api_url(&cfg.realm, env))
         .bearer_auth(viax_api_token)
         .run_graphql(q)
-        .unwrap();
+        .expect("Failed to retrive auth token");
 
     if response.errors.is_some() {
         Err(format!(
@@ -103,6 +107,51 @@ pub fn get_fn(
     fun_result
 }
 
+pub fn list_fns(
+    cfg: &ViaxConfig,
+    env_cfg: &viax_config::config::ConfVal,
+    env: &str,
+    password: &String,
+) -> Result<(), Box<dyn Error>> {
+    use cynic::http::ReqwestBlockingExt;
+
+    let req_client = reqwest::blocking::Client::new();
+    let api_token = acquire_token(env_cfg, &cfg.realm, env, password, &req_client);
+
+    let q = FnList::build(());
+
+    let response = req_client
+        .post(env_cfg.api_url(&cfg.realm, env))
+        .bearer_auth(api_token)
+        .run_graphql(q)
+        .unwrap();
+
+    if response.errors.is_some() {
+        Err(format!(
+            "Failed to get list of funs, errors: {:?}",
+            response.errors.unwrap()
+        ))?
+    } else {
+        let fnlist = response.data.unwrap();
+        if fnlist.filter_function.is_none() {
+            println!("Functions not found");
+        } else {
+            display_header();
+            fnlist
+                .filter_function
+                .expect("Failed to deserealize functions")
+                .edges
+                .expect("Failed to deserealize edges")
+                .iter()
+                .for_each(|edge| {
+                    let fun = edge.node.as_ref().unwrap();
+                    display_fn_data(fun);
+                });
+        }
+        Ok(())
+    }
+}
+
 pub fn command_deploy_fn(
     cfg: &ViaxConfig,
     env_cfg: &ConfVal,
@@ -110,18 +159,38 @@ pub fn command_deploy_fn(
     password: &String,
     path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
+    let tmp_dir = std::env::temp_dir();
+
+    let now = SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+
+    let fun_bundle = tmp_dir.join(format!("f_{}.zip", now));
+
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+    zip_create_from_directory_with_options(&fun_bundle, path, |_| options)?;
+    println!("zip created {:?}", &fun_bundle);
+
     let response = deploy(
         cfg,
         env_cfg,
         env,
         password,
-        path,
+        &fun_bundle,
         String::from(
             r#"{ "operationName": "upsertFunction", "query": "mutation upsertFunction($file: Upload!) { upsertFunction(input: { fun: $file }) { uid name deployStatus version readyRevision ready latestDeploymentStartedAt latestCreatedRevision enqueuedAt } }", "variables": { "file": null } }"#,
         ),
     );
 
-    let data: cynic::GraphQlResponse<FnDeploy> = response.json()?;
+    println!("Cleaning up...");
+    remove_file(&fun_bundle)?;
+
+    if response.is_err() {
+        println!("Failed to deploy function. {:?}", response);
+        return Ok(());
+    }
+    let data: cynic::GraphQlResponse<FnDeploy> = response?.json()?;
     let fun = data.data.unwrap().upsert_function.unwrap();
 
     println!("Enqueued deployment:");
@@ -141,11 +210,14 @@ pub fn command_deploy_fn(
     Ok(())
 }
 
-fn display_fn(fun: &Function) {
+fn display_header() {
     println!(
         "{:<30} {:<5} {:<20} {:<8} {:<10}",
         "NAME", "READY", "DEPLOY_STATUS", "VERSION", "REVISION"
     );
+}
+
+fn display_fn_data(fun: &Function) {
     let ready = &fun.ready;
     println!(
         "{:<30} {:<5} {:<20} {:<8} {:<10}",
@@ -155,6 +227,11 @@ fn display_fn(fun: &Function) {
         &fun.version.as_ref().unwrap(),
         &fun.ready_revision.as_ref().unwrap()
     );
+}
+
+fn display_fn(fun: &Function) {
+    display_header();
+    display_fn_data(fun);
 }
 
 pub fn get_fn_template(

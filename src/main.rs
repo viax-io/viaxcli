@@ -1,8 +1,8 @@
 pub mod cli;
 
 use crate::cli::Cli;
-use api::fun::{command_create_fn, command_deploy_fn, delete_fn, get_fn};
-use api::int::{command_deploy_int, delete_int, get_int};
+use api::fun::{command_create_fn, command_deploy_fn, delete_fn, get_fn, list_fns};
+use api::int::{command_deploy_int, delete_int, get_int, list_ints};
 use cli::{Commands, FnCommands, IntCommands};
 use rpassword::read_password;
 use std::io::{self, Write};
@@ -43,12 +43,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                 command_deploy_int(&cfg, env_cfg, &env, &password, path)?
             }
             IntCommands::Delete { name } => delete_int(&cfg, env_cfg, &env, name, &password)?,
+            IntCommands::List => list_ints(&cfg, env_cfg, &env, &password)?,
         },
 
         Commands::Fn { command } => match command {
             FnCommands::Get { name } => {
                 get_fn(&cfg, env_cfg, &env, name, &password)?;
             }
+            FnCommands::List => list_fns(&cfg, env_cfg, &env, &password)?,
             FnCommands::Deploy { path } => command_deploy_fn(&cfg, env_cfg, &env, &password, path)?,
             FnCommands::Delete { name } => delete_fn(&cfg, env_cfg, &env, name, &password)?,
             FnCommands::Create { lang, name } => {
