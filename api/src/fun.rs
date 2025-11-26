@@ -1,6 +1,8 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
-use std::fs::{create_dir_all, remove_file, OpenOptions};
+use std::fs::{self, create_dir_all, remove_file, File, OpenOptions};
+use std::io::{Read, Write};
+use std::path::Component;
 use std::time::SystemTime;
 use std::{error::Error, path::PathBuf};
 use std::{io, str::FromStr};
@@ -14,9 +16,9 @@ use query::{FnTemplate, FnTemplateVariables};
 use reqwest::blocking::Client;
 use viax_config::config::ConfVal;
 use viax_config::config::ViaxConfig;
-use zip::write::SimpleFileOptions;
-use zip::CompressionMethod;
-use zip_extensions::zip_create_from_directory_with_options;
+use zip::result::ZipResult;
+use zip::write::{FileOptionExtension, FileOptions, SimpleFileOptions};
+use zip::{CompressionMethod, ZipWriter};
 
 pub fn delete_fn(
     cfg: &ViaxConfig,
@@ -169,7 +171,12 @@ pub fn command_deploy_fn(
     let fun_bundle = tmp_dir.join(format!("f_{}.zip", now));
 
     let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
-    zip_create_from_directory_with_options(&fun_bundle, path, |_| options)?;
+
+    let file = File::create(&fun_bundle)?;
+    let zip_writer = ZipWriter::new(file);
+    zip_writer.create_from_directory_with_options2(path, |_| options)?;
+
+    // zip_create_from_directory_with_options(&fun_bundle, path, |_| options)?;
     println!("zip created {:?}", &fun_bundle);
 
     let response = deploy(
@@ -212,7 +219,7 @@ pub fn command_deploy_fn(
 
 fn display_header() {
     println!(
-        "{:<30} {:<5} {:<20} {:<8} {:<10}",
+        "{:<35} {:<5} {:<20} {:<8} {:<10}",
         "NAME", "READY", "DEPLOY_STATUS", "VERSION", "REVISION"
     );
 }
@@ -220,7 +227,7 @@ fn display_header() {
 fn display_fn_data(fun: &Function) {
     let ready = &fun.ready;
     println!(
-        "{:<30} {:<5} {:<20} {:<8} {:<10}",
+        "{:<35} {:<5} {:<20} {:<8} {:<10}",
         fun.name,
         ready.as_ref().unwrap(),
         format!("{:?}", &fun.deploy_status.as_ref().unwrap()),
@@ -302,4 +309,109 @@ pub fn command_create_fn(
 
     println!("Successfully create {name} function! Check dir '{name}'.");
     Ok(())
+}
+
+pub trait ZipWriterExtensions {
+    /// Creates a zip archive that contains the files and directories from the specified directory.
+    fn create_from_directory(self, directory: &PathBuf) -> ZipResult<()>;
+
+    /// Creates a zip archive that contains the files and directories from the specified directory, uses the specified compression level.
+    fn create_from_directory_with_options2<F, T>(
+        self,
+        directory: &PathBuf,
+        cb_file_options: F,
+    ) -> ZipResult<()>
+    where
+        T: FileOptionExtension,
+        F: Fn(&PathBuf) -> FileOptions<T>;
+}
+
+impl<W: Write + io::Seek> ZipWriterExtensions for ZipWriter<W> {
+    fn create_from_directory(self, directory: &PathBuf) -> ZipResult<()> {
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+        self.create_from_directory_with_options2(directory, |_| options)
+    }
+
+    fn create_from_directory_with_options2<F, T>(
+        mut self,
+        directory: &PathBuf,
+        cb_file_options: F,
+    ) -> ZipResult<()>
+    where
+        T: FileOptionExtension,
+        F: Fn(&PathBuf) -> FileOptions<T>,
+    {
+        let mut paths_queue: Vec<PathBuf> = vec![];
+        paths_queue.push(directory.clone());
+
+        let mut buffer = Vec::new();
+
+        while let Some(next) = paths_queue.pop() {
+            let directory_entry_iterator = std::fs::read_dir(next)?;
+
+            for entry in directory_entry_iterator {
+                let entry_path = entry?.path();
+                let file_options = cb_file_options(&entry_path);
+                let entry_metadata = std::fs::metadata(entry_path.clone())?;
+                let symlink_metadata = std::fs::symlink_metadata(entry_path.clone())?;
+                if symlink_metadata.is_symlink() {
+                    let target = fs::read_link(&entry_path)?;
+                    let relative_path = make_relative_path(&directory, &entry_path);
+
+                    self.add_symlink(
+                        relative_path.to_str().unwrap(),
+                        target.to_str().unwrap(),
+                        SimpleFileOptions::default(),
+                    )?;
+                } else if entry_metadata.is_file() {
+                    let mut f = File::open(&entry_path)?;
+                    f.read_to_end(&mut buffer)?;
+                    let relative_path = make_relative_path(&directory, &entry_path);
+                    self.start_file(path_as_string(&relative_path), file_options)?;
+                    self.write_all(buffer.as_ref())?;
+                    buffer.clear();
+                } else if entry_metadata.is_dir() {
+                    let relative_path = make_relative_path(&directory, &entry_path);
+                    self.add_directory(path_as_string(&relative_path), file_options)?;
+                    paths_queue.push(entry_path.clone());
+                }
+            }
+        }
+
+        self.finish()?;
+        Ok(())
+    }
+}
+
+/// Returns a relative path from one path to another.
+pub(crate) fn make_relative_path(root: &PathBuf, current: &PathBuf) -> PathBuf {
+    let mut result = PathBuf::new();
+    let root_components = root.components().collect::<Vec<Component>>();
+    let current_components = current.components().collect::<Vec<_>>();
+    for i in 0..current_components.len() {
+        let current_path_component: Component = current_components[i];
+        if i < root_components.len() {
+            let other: Component = root_components[i];
+            if other != current_path_component {
+                break;
+            }
+        } else {
+            result.push(current_path_component)
+        }
+    }
+    result
+}
+
+// Returns a String representing the given Path.
+pub(crate) fn path_as_string(path: &std::path::Path) -> String {
+    let mut path_str = String::new();
+    for component in path.components() {
+        if let Component::Normal(os_str) = component {
+            if !path_str.is_empty() {
+                path_str.push('/');
+            }
+            path_str.push_str(&*os_str.to_string_lossy());
+        }
+    }
+    path_str
 }
