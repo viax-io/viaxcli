@@ -1,6 +1,5 @@
 use crate::api::deploy;
 use crate::auth::acquire_token;
-use crate::fun::ZipWriterExtensions;
 use std::fs::{remove_file, File};
 use std::time::SystemTime;
 use std::{error::Error, path::PathBuf};
@@ -21,7 +20,8 @@ use viax_config::config::ConfVal;
 use viax_config::config::ViaxConfig;
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipWriter};
-// use zip_extensions::zip_create_from_directory_with_options;
+use zip_extensions::preserve_symlinks_handler::PreserveSymlinksHandler;
+use zip_extensions::ZipWriterExtensions as _;
 
 pub fn delete_int(
     cfg: &ViaxConfig,
@@ -132,7 +132,7 @@ pub fn command_deploy_int(
 
     let file = File::create(&int_bundle)?;
     let zip_writer = ZipWriter::new(file);
-    zip_writer.create_from_directory_with_options2(path, |_| options)?;
+    zip_writer.create_from_directory_with_options(path, |_| options, &PreserveSymlinksHandler)?;
 
     // zip_create_from_directory_with_options(&int_bundle, path, |_| options)?;
     println!("zip created {:?}", &int_bundle);
