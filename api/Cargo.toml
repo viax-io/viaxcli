@@ -13,3 +13,8 @@ zip = "3.0.0"
 viax-schema = { path = "../schema" }
 query = { path = "../query" }
 viax-config = { path = "../config" }
+
+[dev-dependencies]
+mockito = "1"
+tempfile = "3"
+serial_test = "3"
