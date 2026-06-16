@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use viax_config::config::ConfVal;
+use viax_config::config::{ConfVal, API_TOKEN_ENV};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ApiToken {
@@ -13,6 +13,10 @@ pub fn acquire_token(
     password: &String,
     client: &reqwest::blocking::Client,
 ) -> String {
+    if let Ok(token) = std::env::var(API_TOKEN_ENV) {
+        return format!("Bearer {}", token);
+    }
+
     let url = env_cfg.auth_url(realm, env);
     let client_id = &env_cfg.client_id;
     let client_secret = &env_cfg.client_secret;
