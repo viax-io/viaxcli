@@ -300,8 +300,34 @@ pub fn command_create_fn(
     let zip_file = OpenOptions::new().write(true).read(true).open(&dst_zip)?;
     let mut archive = zip::ZipArchive::new(zip_file)?;
     let target_path = PathBuf::from_str(&src_dir)?;
-    archive.extract(&target_path)?;
 
+    // The template archive now wraps all files inside a single extra
+    // top-level folder. Extract into a temporary directory first, detect
+    // that wrapping folder, and flatten its contents into the function
+    // directory so the layout stays `name/<files>` and not
+    // `name/<wrapper>/<files>`.
+    let extract_dir = target_path.join(".tmplt_extract");
+    create_dir_all(&extract_dir)?;
+    archive.extract(&extract_dir)?;
+
+    let mut entries: Vec<PathBuf> = std::fs::read_dir(&extract_dir)?
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<Result<_, _>>()?;
+
+    // If everything sits under a single directory, treat it as the wrapper
+    // and use its contents; otherwise fall back to the extraction root.
+    let content_dir = if entries.len() == 1 && entries[0].is_dir() {
+        entries.remove(0)
+    } else {
+        extract_dir.clone()
+    };
+
+    for entry in std::fs::read_dir(&content_dir)? {
+        let entry = entry?;
+        std::fs::rename(entry.path(), target_path.join(entry.file_name()))?;
+    }
+
+    std::fs::remove_dir_all(&extract_dir)?;
     remove_file(&dst_zip)?;
 
     println!("Successfully create {name} function! Check dir '{name}'.");
